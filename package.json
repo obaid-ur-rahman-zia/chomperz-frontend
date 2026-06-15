@@ -13,7 +13,8 @@
     "next": "15.5.19",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "siwe": "^2.3.2"
+    "siwe": "^2.3.2",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { setToken } from "@/lib/api";
+import { ArrowLeftIcon } from "@/components/Icons";
+import { LoadingScreen } from "@/components/Loading";
 
 export default function AuthCallbackPage() {
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +27,8 @@ export default function AuthCallbackPage() {
       <main className="min-h-screen flex items-center justify-center p-6">
         <div className="card max-w-md w-full text-center">
           <p className="text-[var(--danger)] font-bold mb-4">{error}</p>
-          <a href="/login" className="btn-primary inline-block no-underline">
+          <a href="/login" className="btn-primary inline-flex items-center gap-2 no-underline">
+            <ArrowLeftIcon className="w-4 h-4" />
             Back to login
           </a>
         </div>
@@ -34,8 +37,8 @@ export default function AuthCallbackPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <p className="text-[var(--muted)] font-bold">Signing you in...</p>
+    <main className="min-h-screen">
+      <LoadingScreen label="Signing you in..." />
     </main>
   );
 }

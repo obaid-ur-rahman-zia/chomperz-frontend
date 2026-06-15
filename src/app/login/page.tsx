@@ -1,15 +1,18 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { apiFetch, setToken } from "@/lib/api";
-import { XIcon } from "@/components/Icons";
+import { toast } from "@/lib/toast";
+import { CoinIcon, MapIcon, TrendIcon, XIcon } from "@/components/Icons";
+import { LoadingScreen, Spinner } from "@/components/Loading";
 
 function LoginContent() {
   const searchParams = useSearchParams();
   const [mockHandle, setMockHandle] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [imgSrc, setImgSrc] = useState("/images/chomper.jpg");
 
   useEffect(() => {
     const err = searchParams.get("error");
@@ -35,23 +38,23 @@ function LoginContent() {
       if (detail) {
         msg += ` (${detail})`;
       }
-      setError(msg);
+      toast.error(msg);
     }
   }, [searchParams]);
 
   async function handleMockLogin() {
     if (!mockHandle.trim()) return;
     setLoading(true);
-    setError(null);
     try {
       const data = await apiFetch<{ token: string }>("/api/auth/mock-twitter", {
         method: "POST",
         body: JSON.stringify({ handle: mockHandle.trim() }),
       });
       setToken(data.token);
+      toast.success("Logged in!");
       window.location.href = "/dashboard";
     } catch (e) {
-      setError(
+      toast.error(
         e instanceof Error
           ? e.message
           : "Mock login unavailable. Use Twitter login or set MOCK_TWITTER=true on API."
@@ -62,46 +65,86 @@ function LoginContent() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <div className="card max-w-md w-full text-center">
-        <h1 className="text-3xl font-black tracking-wide mb-2">CHOMPERZ</h1>
-        <p className="text-[var(--muted)] mb-8 font-bold">
-          Sign in to start farming Z-Coins
-        </p>
-
-        {error && (
-          <p className="text-[var(--danger)] text-sm font-bold mb-4">{error}</p>
-        )}
-
-        <a
-          href="/api/auth/twitter"
-          className="btn-primary flex items-center justify-center gap-2.5 w-full no-underline"
-        >
-          <XIcon className="w-5 h-5 shrink-0" />
-          Sign in with X
-        </a>
-
-        {process.env.NODE_ENV !== "production" && (
-          <div className="border-t border-white/10 pt-6 mt-6">
-            <p className="text-xs text-[var(--muted)] mb-3 font-bold">
-              Dev fallback (requires MOCK_TWITTER=true on API)
-            </p>
-            <input
-              type="text"
-              placeholder="@YourHandle"
-              value={mockHandle}
-              onChange={(e) => setMockHandle(e.target.value)}
-              className="w-full bg-black/30 border-2 border-[#3a453d] rounded-xl px-4 py-3 mb-3 font-bold text-white outline-none focus:border-[var(--gold)]"
+    <main className="login-page min-h-screen flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-md">
+        <div className="relative mx-auto w-full max-w-[240px] sm:max-w-[280px] mb-6">
+          <div className="absolute -inset-3 rounded-3xl bg-[var(--green)]/20 blur-xl" aria-hidden />
+          <div className="relative aspect-square rounded-3xl overflow-hidden border-4 border-[var(--green)] bg-[#1e2420] shadow-[0_0_40px_rgba(76,209,55,0.25)]">
+            <Image
+              src={imgSrc}
+              alt="Chomperz mascot"
+              fill
+              className="object-contain p-4 sm:p-6"
+              priority
+              onError={() => setImgSrc("/chomper.svg")}
             />
-            <button
-              onClick={handleMockLogin}
-              disabled={loading}
-              className="btn-secondary w-full disabled:opacity-50"
-            >
-              {loading ? "Loading..." : "Mock Login"}
-            </button>
           </div>
-        )}
+        </div>
+
+        <div className="card text-center">
+          <h1 className="text-3xl sm:text-4xl font-black tracking-wide mb-1">
+            CHOMPERZ
+          </h1>
+          <p className="text-[var(--muted)] mb-5 font-bold text-sm sm:text-base">
+            Sign in to start farming Z-Coins
+          </p>
+
+          <div className="flex flex-wrap justify-center gap-2 mb-6">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#3a453d] bg-black/25 px-3 py-1.5 text-xs font-extrabold text-[var(--gold)]">
+              <CoinIcon className="w-3.5 h-3.5" />
+              Idle Farming
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#3a453d] bg-black/25 px-3 py-1.5 text-xs font-extrabold text-[var(--green)]">
+              <TrendIcon className="w-3.5 h-3.5" />
+              NFT Boost
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#3a453d] bg-black/25 px-3 py-1.5 text-xs font-extrabold text-[var(--blue)]">
+              <MapIcon className="w-3.5 h-3.5" />
+              10×10 Map
+            </span>
+          </div>
+
+          <a
+            href="/api/auth/twitter"
+            className="btn-primary flex items-center justify-center gap-2.5 w-full no-underline py-3.5"
+          >
+            <XIcon className="w-5 h-5 shrink-0" />
+            Sign in with X
+          </a>
+
+          {process.env.NODE_ENV !== "production" && (
+            <div className="border-t border-white/10 pt-6 mt-6">
+              <p className="text-xs text-[var(--muted)] mb-3 font-bold">
+                Dev fallback (requires MOCK_TWITTER=true on API)
+              </p>
+              <input
+                type="text"
+                placeholder="@YourHandle"
+                value={mockHandle}
+                onChange={(e) => setMockHandle(e.target.value)}
+                className="w-full bg-black/30 border-2 border-[#3a453d] rounded-xl px-4 py-3 mb-3 font-bold text-white outline-none focus:border-[var(--gold)]"
+              />
+              <button
+                onClick={handleMockLogin}
+                disabled={loading}
+                className="btn-secondary w-full disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <Spinner size="sm" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Mock Login"
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <p className="text-center text-[10px] sm:text-xs text-[var(--muted)] font-bold mt-5 px-4">
+          Hatch your Chomper, link your wallet, and claim territory on the map.
+        </p>
       </div>
     </main>
   );
@@ -109,7 +152,13 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<main className="min-h-screen flex items-center justify-center">Loading...</main>}>
+    <Suspense
+      fallback={
+        <main className="login-page min-h-screen">
+          <LoadingScreen />
+        </main>
+      }
+    >
       <LoginContent />
     </Suspense>
   );

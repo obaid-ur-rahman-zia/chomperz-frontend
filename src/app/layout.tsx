@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
+import { AppToaster } from "@/components/AppToaster";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -13,6 +14,12 @@ export const metadata: Metadata = {
   description: "Chomperz Web2.5 idle game prototype",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -20,7 +27,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${nunito.variable} antialiased`}>{children}</body>
+      <body className={`${nunito.variable} antialiased`}>
+        {children}
+        <AppToaster />
+      </body>
     </html>
   );
 }

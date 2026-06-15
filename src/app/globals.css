@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #1e2420;
+  --card: #2b332d;
+  --text: #f5f6fa;
+  --muted: #a4b0af;
+  --gold: #fbc531;
+  --green: #4cd137;
+  --blue: #00a8ff;
+  --danger: #eb4d4b;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-card: var(--card);
+  --color-gold: var(--gold);
+  --color-green: var(--green);
+  --color-blue: var(--blue);
+  --font-sans: var(--font-nunito);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-nunito), system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary {
+  background: var(--green);
+  color: #111;
+  font-weight: 800;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  transition: transform 0.1s, opacity 0.2s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background: var(--blue);
+  color: white;
+  font-weight: 800;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.25rem;
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+  font-weight: 800;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.25rem;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}

@@ -19,6 +19,10 @@ function LoginContent() {
         oauth_denied: "Twitter login was cancelled.",
         token_exchange_failed: "Twitter token exchange failed.",
         user_fetch_failed: "Could not fetch Twitter profile.",
+        user_context_required:
+          "X API rejected the login token. Re-authorize after backend deploy — old sessions may lack required scopes.",
+        twitter_forbidden:
+          "X API denied profile access. In Developer Portal set App permissions to Read, enable OAuth 2.0, and include tweet.read + users.read scopes.",
         invalid_state: "Invalid OAuth state. Try again.",
         server_error: "Server error during login.",
         invalid_client:
@@ -27,7 +31,7 @@ function LoginContent() {
           "Callback URL does not match the X Developer Portal. Use http://127.0.0.1:3000/api/auth/twitter/callback exactly.",
       };
       let msg = messages[err] || "Login failed.";
-      if (detail && process.env.NODE_ENV === "development") {
+      if (detail) {
         msg += ` (${detail})`;
       }
       setError(msg);

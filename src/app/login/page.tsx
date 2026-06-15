@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { apiFetch, setToken } from "@/lib/api";
+import { XIcon } from "@/components/Icons";
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -74,8 +75,9 @@ function LoginContent() {
 
         <a
           href="/api/auth/twitter"
-          className="btn-primary block w-full text-center no-underline"
+          className="btn-primary flex items-center justify-center gap-2.5 w-full no-underline"
         >
+          <XIcon className="w-5 h-5 shrink-0" />
           Sign in with X
         </a>
 

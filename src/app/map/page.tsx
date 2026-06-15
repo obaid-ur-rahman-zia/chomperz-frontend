@@ -1,20 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { apiFetch, formatCoins, type PlotSummary } from "@/lib/api";
-
-interface PlotDetail extends PlotSummary {
-  landType?: string;
-  displayId?: string;
-}
+import Image from "next/image";
+import { AppHeader } from "@/components/AppHeader";
+import {
+  apiFetch,
+  formatCoins,
+  type PlotDetail,
+  type PlotSummary,
+} from "@/lib/api";
+import {
+  CoinIcon,
+  CrownIcon,
+  MapIcon,
+  PlotIcon,
+  SwordIcon,
+} from "@/components/Icons";
 
 export default function MapPage() {
   const [plots, setPlots] = useState<PlotSummary[]>([]);
-  const [selectedId, setSelectedId] = useState<number | null>(12);
+  const [selectedId, setSelectedId] = useState<number | null>(11);
   const [detail, setDetail] = useState<PlotDetail | null>(null);
   const [zCoins, setZCoins] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [bidAmount, setBidAmount] = useState("");
+  const [bidding, setBidding] = useState(false);
+  const [bidMsg, setBidMsg] = useState<string | null>(null);
+
+  async function loadPlayer() {
+    try {
+      const me = await apiFetch<{ zCoins: number }>("/api/player/me");
+      setZCoins(me.zCoins);
+    } catch {
+      setZCoins(null);
+    }
+  }
 
   useEffect(() => {
     async function load() {
@@ -23,13 +43,7 @@ export default function MapPage() {
           "/api/plots"
         );
         setPlots(allPlots);
-
-        try {
-          const me = await apiFetch<{ zCoins: number }>("/api/player/me");
-          setZCoins(me.zCoins);
-        } catch {
-          /* not logged in */
-        }
+        await loadPlayer();
       } finally {
         setLoading(false);
       }
@@ -39,10 +53,36 @@ export default function MapPage() {
 
   useEffect(() => {
     if (selectedId === null) return;
-    apiFetch<{ plot: PlotDetail }>(`/api/plots/${selectedId}`).then((data) =>
-      setDetail(data.plot)
-    );
+    apiFetch<{ plot: PlotDetail }>(`/api/plots/${selectedId}`).then((data) => {
+      setDetail(data.plot);
+      setBidAmount(String(data.plot.minBid ?? 1));
+    });
   }, [selectedId]);
+
+  async function handleOutbid() {
+    if (selectedId === null) return;
+    const amount = parseInt(bidAmount, 10);
+    if (!amount) return;
+    setBidding(true);
+    setBidMsg(null);
+    try {
+      const data = await apiFetch<{ zCoins: number }>(`/api/plots/${selectedId}/bid`, {
+        method: "POST",
+        body: JSON.stringify({ amount }),
+      });
+      setZCoins(data.zCoins);
+      setBidMsg(`Bid placed: ${amount} Z-Coins / day`);
+      const refreshed = await apiFetch<{ plot: PlotDetail }>(
+        `/api/plots/${selectedId}`
+      );
+      setDetail(refreshed.plot);
+      setBidAmount(String(refreshed.plot.minBid ?? amount + 1));
+    } catch (e) {
+      setBidMsg(e instanceof Error ? e.message : "Bid failed");
+    } finally {
+      setBidding(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -54,19 +94,12 @@ export default function MapPage() {
 
   return (
     <main className="max-w-5xl mx-auto p-6">
-      <header className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-black">🗺️ CHOMPERZ TERRITORY</h1>
-        <div className="flex items-center gap-4">
-          {zCoins !== null && (
-            <span className="bg-black/30 border-2 border-[#3a453d] rounded-full px-4 py-2 font-extrabold text-[var(--gold)]">
-              🪙 {formatCoins(zCoins)} Z-Coins
-            </span>
-          )}
-          <Link href="/dashboard" className="text-sm font-bold text-[var(--blue)]">
-            ← Basecamp
-          </Link>
-        </div>
-      </header>
+      <AppHeader
+        title="CHOMPERZ TERRITORY"
+        icon={<MapIcon className="w-7 h-7 text-[var(--green)] shrink-0" />}
+        zCoins={zCoins}
+        backHref="/dashboard"
+      />
 
       <div className="grid lg:grid-cols-[1.2fr_1fr] gap-6">
         <div className="card">
@@ -90,66 +123,97 @@ export default function MapPage() {
               );
             })}
           </div>
-          <p className="text-xs text-[var(--muted)] font-bold mt-4">
-            <span className="text-[var(--gold)]">👑 Gold borders</span> indicate
-            Legendary Plots. High rent limits, high taxes.
+          <p className="text-xs text-[var(--muted)] font-bold mt-4 flex items-center gap-1.5">
+            <CrownIcon className="text-[var(--gold)]" />
+            <span>
+              <span className="text-[var(--gold)]">Gold borders</span> indicate
+              Legendary Plots. High rent limits, high taxes.
+            </span>
           </p>
         </div>
 
         <div className="card">
           {detail ? (
             <>
-              <h2 className="text-xl font-black text-[var(--green)] mb-1">
-                📍 PLOT #{detail.displayId ?? String(detail.plotId + 1).padStart(2, "0")}
+              <h2 className="text-xl font-black text-[var(--green)] mb-1 flex items-center gap-2">
+                <PlotIcon />
+                PLOT #{detail.displayId ?? String(detail.plotId + 1).padStart(2, "0")}
               </h2>
               <p className="text-[var(--muted)] font-bold mb-6">{detail.name}</p>
 
-              <div className="bg-black/20 rounded-2xl p-4 mb-4">
-                <p className="stat-label mb-2">Land Type</p>
-                <p className="font-extrabold">
-                  {detail.landType ??
-                    (detail.isLegendary ? "Legendary (Crown Land)" : "Frontier")}
+              {detail.landlordHandle && (
+                <div className="bg-black/25 rounded-2xl p-4 mb-4 border border-[var(--gold)]/20">
+                  <p className="stat-label mb-3 flex items-center gap-1.5 text-[var(--gold)]">
+                    <CrownIcon className="w-4 h-4" />
+                    Current Landlord
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-[var(--green)] bg-[#1e2420] shrink-0">
+                      <Image
+                        src={detail.landlordAvatarUrl || "/images/chomper.jpg"}
+                        alt="Landlord"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="font-extrabold">{detail.landlordHandle}</p>
+                      <p className="text-xs text-[var(--muted)] font-bold">
+                        Takes {detail.landlordTaxPct ?? 10}% of all rent collected
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="mb-4">
+                <p className="stat-label mb-3 flex items-center gap-1.5">
+                  <SwordIcon />
+                  Active Renters (Max 3)
                 </p>
-              </div>
-
-              <div className="bg-black/20 rounded-2xl p-4 mb-4">
-                <p className="stat-label mb-2">Status</p>
-                <p className="font-extrabold capitalize">{detail.status}</p>
-              </div>
-
-              <div className="bg-black/20 rounded-2xl p-4">
-                <p className="stat-label mb-2">Current Owner</p>
-                {detail.ownerWallet ? (
-                  <p className="font-extrabold text-[var(--green)]">
-                    {detail.ownerWallet.slice(0, 6)}...{detail.ownerWallet.slice(-4)}
-                  </p>
+                {detail.renters.length === 0 ? (
+                  <p className="text-sm text-[var(--muted)] font-bold">No renters yet</p>
                 ) : (
-                  <p className="font-bold text-[var(--muted)]">Unclaimed</p>
-                )}
-                {detail.isLegendary && detail.legendaryTokenId && (
-                  <p className="text-xs text-[var(--gold)] font-bold mt-2">
-                    Bound to Legendary NFT #{detail.legendaryTokenId}
-                  </p>
-                )}
-              </div>
-
-              {detail.renters.length > 0 && (
-                <div className="mt-4">
-                  <p className="stat-label mb-2">Active Renters</p>
                   <ul className="space-y-2">
                     {detail.renters.map((r, i) => (
                       <li
-                        key={i}
-                        className="flex justify-between bg-black/15 rounded-xl px-3 py-2 text-sm font-bold"
+                        key={r.walletAddress}
+                        className="flex justify-between items-center bg-black/15 rounded-xl px-3 py-2.5 text-sm font-bold"
                       >
-                        <span>{r.walletAddress.slice(0, 8)}...</span>
-                        <span className="text-[var(--gold)]">
+                        <span>
+                          {i + 1}. {r.twitterHandle || `${r.walletAddress.slice(0, 8)}...`}
+                        </span>
+                        <span className="text-[var(--gold)] flex items-center gap-1">
+                          <CoinIcon className="w-3.5 h-3.5" />
                           {r.dailyBid} / day
                         </span>
                       </li>
                     ))}
                   </ul>
-                </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 mt-6">
+                <input
+                  type="number"
+                  min={detail.minBid ?? 1}
+                  value={bidAmount}
+                  onChange={(e) => setBidAmount(e.target.value)}
+                  placeholder={`Min. ${detail.minBid ?? 1}`}
+                  className="flex-1 bg-black/30 border-2 border-[#3a453d] rounded-xl px-4 py-3 font-bold text-white outline-none focus:border-[var(--gold)]"
+                />
+                <button
+                  onClick={handleOutbid}
+                  disabled={bidding}
+                  className="btn-danger px-6 py-3 shrink-0 disabled:opacity-50"
+                >
+                  {bidding ? "..." : "OUTBID"}
+                </button>
+              </div>
+              {bidMsg && (
+                <p className="text-xs font-bold text-center mt-2 text-[var(--green)]">
+                  {bidMsg}
+                </p>
               )}
             </>
           ) : (

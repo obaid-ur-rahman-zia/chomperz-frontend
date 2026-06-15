@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BrowserProvider } from "ethers";
 import { SiweMessage } from "siwe";
 import { apiFetch } from "@/lib/api";
+import { MetaMaskIcon } from "@/components/Icons";
 
 interface WalletConnectProps {
   walletAddress: string | null;
@@ -81,8 +82,9 @@ export function WalletConnect({ walletAddress, onLinked }: WalletConnectProps) {
       <button
         onClick={connectWallet}
         disabled={loading}
-        className="btn-secondary w-full disabled:opacity-50"
+        className="btn-secondary w-full disabled:opacity-50 flex items-center justify-center gap-2.5"
       >
+        <MetaMaskIcon className="w-5 h-5 shrink-0" />
         {loading ? "Connecting..." : "Connect MetaMask to Boost"}
       </button>
       {error && (

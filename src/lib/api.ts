@@ -27,9 +27,19 @@ export interface PlayerData {
   zCoins: number;
   powerLvl: number;
   speedLvl: number;
+  powerUpgradeCost: number;
+  speedUpgradeCost: number;
   lastClaimedAt: string;
   cachedNftCount: number;
+  cachedTokenIds?: number[];
   economy: PlayerEconomy;
+}
+
+export interface PlotRenter {
+  walletAddress: string;
+  twitterHandle?: string;
+  dailyBid: number;
+  escrowBalance: number;
 }
 
 export interface PlotSummary {
@@ -38,8 +48,27 @@ export interface PlotSummary {
   legendaryTokenId: number | null;
   name: string;
   ownerWallet: string | null;
+  landlordHandle?: string | null;
+  landlordAvatarUrl?: string | null;
   status: string;
-  renters: { walletAddress: string; dailyBid: number; escrowBalance: number }[];
+  renters: PlotRenter[];
+}
+
+export interface PlotDetail extends PlotSummary {
+  landType?: string;
+  displayId?: string;
+  minBid?: number;
+  landlordTaxPct?: number;
+}
+
+export interface FurnitureItem {
+  id: string;
+  name: string;
+  price: number;
+  w: number;
+  h: number;
+  color: string;
+  shortLabel: string;
 }
 
 export async function apiFetch<T>(

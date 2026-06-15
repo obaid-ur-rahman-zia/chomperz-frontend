@@ -74,30 +74,32 @@ function LoginContent() {
 
         <a
           href="/api/auth/twitter"
-          className="btn-primary block w-full mb-4 text-center no-underline"
+          className="btn-primary block w-full text-center no-underline"
         >
           Sign in with X
         </a>
 
-        <div className="border-t border-white/10 pt-6 mt-6">
-          <p className="text-xs text-[var(--muted)] mb-3 font-bold">
-            Dev fallback (requires MOCK_TWITTER=true on API)
-          </p>
-          <input
-            type="text"
-            placeholder="@YourHandle"
-            value={mockHandle}
-            onChange={(e) => setMockHandle(e.target.value)}
-            className="w-full bg-black/30 border-2 border-[#3a453d] rounded-xl px-4 py-3 mb-3 font-bold text-white outline-none focus:border-[var(--gold)]"
-          />
-          <button
-            onClick={handleMockLogin}
-            disabled={loading}
-            className="btn-secondary w-full disabled:opacity-50"
-          >
-            {loading ? "Loading..." : "Mock Login"}
-          </button>
-        </div>
+        {process.env.NODE_ENV !== "production" && (
+          <div className="border-t border-white/10 pt-6 mt-6">
+            <p className="text-xs text-[var(--muted)] mb-3 font-bold">
+              Dev fallback (requires MOCK_TWITTER=true on API)
+            </p>
+            <input
+              type="text"
+              placeholder="@YourHandle"
+              value={mockHandle}
+              onChange={(e) => setMockHandle(e.target.value)}
+              className="w-full bg-black/30 border-2 border-[#3a453d] rounded-xl px-4 py-3 mb-3 font-bold text-white outline-none focus:border-[var(--gold)]"
+            />
+            <button
+              onClick={handleMockLogin}
+              disabled={loading}
+              className="btn-secondary w-full disabled:opacity-50"
+            >
+              {loading ? "Loading..." : "Mock Login"}
+            </button>
+          </div>
+        )}
       </div>
     </main>
   );

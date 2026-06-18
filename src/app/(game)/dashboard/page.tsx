@@ -17,6 +17,8 @@ import {
   formatDuration,
   formatPercent,
 } from "@/lib/api";
+import { MIN_ZCOIN_CLAIM } from "@/lib/economy";
+import { useDailyTaskStatus, useLivePendingZCoins } from "@/hooks/useLiveEarnings";
 import { getChomperLabelFromPlayer } from "@/lib/chomper";
 import { toast } from "@/lib/toast";
 
@@ -39,6 +41,12 @@ function DashboardContent() {
   const [dailyTaskLoading, setDailyTaskLoading] = useState(false);
   const [speedRemaining, setSpeedRemaining] = useState(0);
 
+  const dailyRate = player?.economy.dailyRate ?? 0;
+  const livePendingZ = useLivePendingZCoins(dailyRate, player?.lastClaimAt ?? null);
+  const dailyTask = useDailyTaskStatus(player?.lastDailyTaskAt ?? null);
+  const canClaimZ = livePendingZ >= MIN_ZCOIN_CLAIM;
+  const canClaimDaily = dailyTask.available;
+
   useEffect(() => {
     if (!player?.isSpeedUpgrading) {
       setSpeedRemaining(0);
@@ -52,6 +60,7 @@ function DashboardContent() {
   }, [player?.isSpeedUpgrading, player?.speedUpgradeRemainingMs]);
 
   async function handleClaim() {
+    if (!canClaimZ) return;
     setClaiming(true);
     try {
       const data = await apiFetch<{ earned: number; zCoins: number }>(
@@ -68,6 +77,7 @@ function DashboardContent() {
   }
 
   async function handleDailyTask() {
+    if (!canClaimDaily) return;
     setDailyTaskLoading(true);
     try {
       const data = await apiFetch<{ awarded: number }>("/api/player/daily-task", {
@@ -247,14 +257,14 @@ function DashboardContent() {
                     +{formatCoins(economy.dailyRate)}/Day
                   </span>
                   <span className="text-gray-400 truncate">
-                    (Pen: {formatCoins(economy.pendingEarnings)})
+                    (Pen: {formatCoins(livePendingZ)})
                   </span>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={handleClaim}
-                disabled={claiming}
+                disabled={claiming || !canClaimZ}
                 className="btn-primary py-2 px-3 text-[10px] md:text-sm shrink-0 disabled:opacity-50"
               >
                 {claiming ? <Spinner size="sm" /> : <ClaimArrowIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />}
@@ -273,14 +283,23 @@ function DashboardContent() {
                   </span>
                   <span className="text-gray-300 font-medium text-xs md:text-sm">Coins</span>
                 </div>
-                <div className="text-[10px] md:text-xs text-gray-400 ml-6">
-                  Daily task reward available
+                <div className="flex items-center gap-1 ml-6 text-[10px] md:text-xs flex-wrap">
+                  {canClaimDaily ? (
+                    <span className="text-gray-400">Daily task reward available</span>
+                  ) : (
+                    <span className="text-gray-400">
+                      Next claim in {formatDuration(dailyTask.remainingMs)}
+                    </span>
+                  )}
+                  <span className="text-gray-500">
+                    (Pen: {formatCoins(canClaimDaily ? dailyTask.reward : 0)})
+                  </span>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={handleDailyTask}
-                disabled={dailyTaskLoading}
+                disabled={dailyTaskLoading || !canClaimDaily}
                 className="btn-primary py-2 px-3 text-[10px] md:text-sm shrink-0 disabled:opacity-50"
               >
                 {dailyTaskLoading ? (

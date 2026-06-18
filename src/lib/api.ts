@@ -84,6 +84,8 @@ export interface PlayerData {
   lastLoginAt: string;
   lastClaimedAt: string;
   lastClaimAt: string;
+  lastDailyTaskAt: string | null;
+  dailyTaskReward: number;
   powerLvl: number;
   speedLvl: number;
   speedUpgradingUntil?: string | null;

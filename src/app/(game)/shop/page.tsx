@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { GameShell } from "@/components/GameShell";
-import { AppHeader } from "@/components/AppHeader";
 import { CoinIcon, HomeIcon, ShopIcon } from "@/components/Icons";
 import { apiFetch, formatCoins, type FurnitureItem } from "@/lib/api";
 import { toast } from "@/lib/toast";
@@ -50,13 +48,11 @@ export default function ShopPage() {
   }
 
   return (
-    <GameShell>
-      <AppHeader
-        title="FURNITURE SHOP"
-        icon={<ShopIcon className="w-6 h-6 text-[var(--gold)] shrink-0" />}
-        zCoins={zCoins}
-        backHref="/dashboard"
-      />
+    <>
+      <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
+        <ShopIcon className="w-6 h-6 text-[var(--gold)] shrink-0" />
+        Furniture Shop
+      </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {catalog.map((item) => {
@@ -98,6 +94,6 @@ export default function ShopPage() {
         <HomeIcon className="w-4 h-4" />
         Go to My Crib
       </Link>
-    </GameShell>
+    </>
   );
 }

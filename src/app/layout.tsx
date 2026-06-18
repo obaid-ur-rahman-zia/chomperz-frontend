@@ -10,14 +10,16 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "Chomperz Basecamp",
-  description: "Chomperz Web2.5 idle game prototype",
+  title: "ChomperZ Idle",
+  description: "ChomperZ Web2.5 idle game",
 };
 
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
   viewportFit: "cover" as const,
+  themeColor: "#1a1a1a",
 };
 
 export default function RootLayout({

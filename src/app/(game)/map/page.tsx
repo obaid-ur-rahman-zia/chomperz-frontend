@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AppHeader } from "@/components/AppHeader";
 import { UserAvatar } from "@/components/UserAvatar";
 import {
   apiFetch,
@@ -16,27 +15,20 @@ import {
   PlotIcon,
   SwordIcon,
 } from "@/components/Icons";
-import { GameShell } from "@/components/GameShell";
+import { usePlayer } from "@/hooks/usePlayer";
 import { toast } from "@/lib/toast";
 import { MapSkeleton, PlotDetailSkeleton, Spinner } from "@/components/Loading";
 
 export default function MapPage() {
+  const { player, refresh } = usePlayer();
   const [plots, setPlots] = useState<PlotSummary[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(11);
   const [detail, setDetail] = useState<PlotDetail | null>(null);
-  const [zCoins, setZCoins] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [bidAmount, setBidAmount] = useState("");
   const [bidding, setBidding] = useState(false);
 
-  async function loadPlayer() {
-    try {
-      const me = await apiFetch<{ zCoins: number }>("/api/player/me");
-      setZCoins(me.zCoins);
-    } catch {
-      setZCoins(null);
-    }
-  }
+  const zCoins = player?.zCoins ?? null;
 
   useEffect(() => {
     async function load() {
@@ -45,7 +37,6 @@ export default function MapPage() {
           "/api/plots"
         );
         setPlots(allPlots);
-        await loadPlayer();
       } finally {
         setLoading(false);
       }
@@ -67,11 +58,11 @@ export default function MapPage() {
     if (!amount) return;
     setBidding(true);
     try {
-      const data = await apiFetch<{ zCoins: number }>(`/api/plots/${selectedId}/bid`, {
+      await apiFetch<{ zCoins: number }>(`/api/plots/${selectedId}/bid`, {
         method: "POST",
         body: JSON.stringify({ amount }),
       });
-      setZCoins(data.zCoins);
+      await refresh({ silent: true });
       toast.success(`Bid placed: ${amount} Z-Coins / day`);
       const refreshed = await apiFetch<{ plot: PlotDetail }>(
         `/api/plots/${selectedId}`
@@ -90,13 +81,11 @@ export default function MapPage() {
   }
 
   return (
-    <GameShell>
-      <AppHeader
-        title="TERRITORY"
-        icon={<MapIcon className="w-6 h-6 text-[var(--green)] shrink-0" />}
-        zCoins={zCoins}
-        backHref="/dashboard"
-      />
+    <>
+      <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
+        <MapIcon className="w-6 h-6 text-[var(--green)] shrink-0" />
+        Territory Map
+      </h2>
 
       <div className="grid lg:grid-cols-[1.2fr_1fr] gap-4 lg:gap-6">
         <div className="card">
@@ -216,6 +205,6 @@ export default function MapPage() {
           )}
         </div>
       </div>
-    </GameShell>
+    </>
   );
 }

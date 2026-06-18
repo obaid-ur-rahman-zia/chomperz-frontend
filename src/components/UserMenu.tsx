@@ -9,13 +9,20 @@ import { apiFetch, clearToken } from "@/lib/api";
 interface UserMenuProps {
   twitterHandle: string;
   profilePicUrl?: string | null;
+  compact?: boolean;
+  className?: string;
 }
 
 function formatHandle(handle: string) {
   return handle.startsWith("@") ? handle : `@${handle}`;
 }
 
-export function UserMenu({ twitterHandle, profilePicUrl }: UserMenuProps) {
+export function UserMenu({
+  twitterHandle,
+  profilePicUrl,
+  compact = false,
+  className = "",
+}: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const avatar = profilePicUrl || "/images/chomper.jpg";
@@ -50,29 +57,41 @@ export function UserMenu({ twitterHandle, profilePicUrl }: UserMenuProps) {
   }
 
   return (
-    <div className="relative" ref={ref}>
+    <div className={`relative min-w-0 ${className}`} ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="flex items-center gap-2 rounded-full border-2 border-[#3a453d] bg-black/30 pl-1 pr-2.5 py-1 min-h-[40px] transition-opacity hover:opacity-90"
+        className={`game-pill flex items-center gap-1.5 rounded-full w-full min-w-0 transition-[filter] hover:brightness-110 ${
+          compact ? "pl-0.5 pr-1.5 py-0.5 min-h-[32px] lg:min-h-[40px] lg:pl-1 lg:pr-2.5 lg:py-1" : "pl-1 pr-2.5 py-1 min-h-[40px]"
+        }`}
       >
-        <div className="relative w-8 h-8 rounded-full overflow-hidden border-2 border-[var(--green)] shrink-0">
+        <div
+          className={`relative rounded-full overflow-hidden border-2 border-[var(--green)] shrink-0 ${
+            compact ? "w-7 h-7 lg:w-8 lg:h-8" : "w-8 h-8"
+          }`}
+        >
           <UserAvatar src={avatar} alt={displayName} />
         </div>
-        <span className="text-sm font-extrabold max-w-[72px] sm:max-w-[120px] truncate">
+        <span
+          className={`font-extrabold truncate min-w-0 flex-1 text-left ${
+            compact ? "text-[11px] lg:text-sm max-w-full" : "text-sm max-w-[120px]"
+          }`}
+        >
           {displayName}
         </span>
         <ChevronDownIcon
-          className={`w-4 h-4 text-[var(--muted)] shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`text-[var(--muted)] shrink-0 transition-transform ${open ? "rotate-180" : ""} ${
+            compact ? "w-3.5 h-3.5 lg:w-4 lg:h-4" : "w-4 h-4"
+          }`}
         />
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full mt-2 w-52 rounded-xl border-2 border-[#3a453d] bg-[var(--card)] shadow-xl z-50 overflow-hidden"
+          className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-white/10 bg-[#2a2b2a] shadow-[0_8px_0_rgba(0,0,0,0.35),0_12px_32px_rgba(0,0,0,0.5)] z-50 overflow-hidden"
         >
           <div className="flex items-center gap-3 px-3 py-3 border-b border-white/10">
             <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-[var(--green)] shrink-0">

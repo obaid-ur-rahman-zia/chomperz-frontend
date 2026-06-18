@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { GameShell } from "@/components/GameShell";
-import { AppHeader } from "@/components/AppHeader";
-import { CoinIcon, EditIcon, EyeIcon, HomeIcon, SaveIcon, ShopIcon } from "@/components/Icons";
+import { EditIcon, EyeIcon, HomeIcon, SaveIcon, ShopIcon } from "@/components/Icons";
 import { apiFetch, type FurnitureItem } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { CribSkeleton } from "@/components/Loading";
@@ -22,7 +20,6 @@ export default function CribPage() {
   const [catalog, setCatalog] = useState<FurnitureItem[]>([]);
   const [owned, setOwned] = useState<string[]>([]);
   const [layout, setLayout] = useState<LayoutEntry[]>([]);
-  const [zCoins, setZCoins] = useState(0);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -37,7 +34,6 @@ export default function CribPage() {
     setCatalog(data.catalog);
     setOwned(data.ownedFurniture);
     setLayout(data.layout);
-    setZCoins(data.zCoins);
     setLoading(false);
   }, []);
 
@@ -80,13 +76,11 @@ export default function CribPage() {
   const ownedItems = catalog.filter((c) => owned.includes(c.id));
 
   return (
-    <GameShell>
-      <AppHeader
-        title="MY CRIB"
-        icon={<HomeIcon className="w-6 h-6 text-[var(--green)] shrink-0" />}
-        zCoins={zCoins}
-        backHref="/dashboard"
-      />
+    <>
+      <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
+        <HomeIcon className="w-6 h-6 text-[var(--green)] shrink-0" />
+        My Crib
+      </h2>
 
       <div className="card mb-4">
         <div className="w-full max-w-md mx-auto aspect-[8/5] relative rounded-2xl bg-[#1a221c] border-2 border-[#3a453d] overflow-hidden">
@@ -198,6 +192,6 @@ export default function CribPage() {
           </p>
         )}
       </div>
-    </GameShell>
+    </>
   );
 }

@@ -9,13 +9,14 @@ import {
   disconnectWalletConnectSession,
   getWalletConnectProjectId,
 } from "@/lib/walletConnect";
-import { MetaMaskIcon, UnlinkIcon, WalletConnectIcon } from "@/components/Icons";
+import { UnlinkIcon, WalletConnectIcon } from "@/components/Icons";
 import { Spinner } from "@/components/Loading";
 
 interface WalletConnectProps {
   walletAddress: string | null;
   onLinked: () => void;
   compact?: boolean;
+  variant?: "default" | "header";
 }
 
 function walletErrorMessage(e: unknown): string {
@@ -29,28 +30,34 @@ function walletErrorMessage(e: unknown): string {
   return err.message || "Wallet connection failed";
 }
 
-export function WalletConnect({ walletAddress, onLinked, compact }: WalletConnectProps) {
+export function WalletConnect({
+  walletAddress,
+  onLinked,
+  compact,
+  variant = "default",
+}: WalletConnectProps) {
   const [loading, setLoading] = useState<"metamask" | "wc" | "disconnect" | null>(null);
   const [syncing, setSyncing] = useState(false);
   const wcEnabled = Boolean(getWalletConnectProjectId());
+  const isHeader = variant === "header";
 
-  async function connectInjected() {
-    if (typeof window === "undefined" || !window.ethereum) {
-      toast.error("MetaMask not detected. Use WalletConnect on mobile.");
-      return;
-    }
-
-    setLoading("metamask");
-    try {
-      await linkWalletWithProvider(window.ethereum);
-      toast.success("Wallet connected & NFTs synced!");
-      onLinked();
-    } catch (e) {
-      toast.error(walletErrorMessage(e));
-    } finally {
-      setLoading(null);
-    }
-  }
+  // MetaMask disabled — WalletConnect only
+  // async function connectInjected() {
+  //   if (typeof window === "undefined" || !window.ethereum) {
+  //     toast.error("MetaMask not detected. Use WalletConnect on mobile.");
+  //     return;
+  //   }
+  //   setLoading("metamask");
+  //   try {
+  //     await linkWalletWithProvider(window.ethereum);
+  //     toast.success("Wallet connected & NFTs synced!");
+  //     onLinked();
+  //   } catch (e) {
+  //     toast.error(walletErrorMessage(e));
+  //   } finally {
+  //     setLoading(null);
+  //   }
+  // }
 
   async function connectWithWalletConnect() {
     setLoading("wc");
@@ -93,7 +100,39 @@ export function WalletConnect({ walletAddress, onLinked, compact }: WalletConnec
     }
   }
 
+  const connectBtnClass = isHeader
+    ? "disabled:opacity-50 flex items-center justify-center gap-1.5 font-extrabold rounded-lg px-2.5 py-1.5 text-[11px] lg:text-xs shrink-0 transition-opacity hover:opacity-90"
+    : "w-full disabled:opacity-50 flex items-center justify-center gap-2.5 font-extrabold rounded-xl px-5 py-3 transition-opacity hover:opacity-90";
+
   if (walletAddress) {
+    if (isHeader) {
+      return (
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="game-pill px-2 py-1 rounded-full text-[10px] lg:text-xs font-bold text-[var(--green)] tabular-nums hidden sm:inline">
+            {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+          </span>
+          <button
+            type="button"
+            onClick={refreshNfts}
+            disabled={loading !== null || syncing}
+            title="Refresh NFTs"
+            className="btn-secondary px-2 py-1 text-[10px] lg:text-xs shrink-0 disabled:opacity-50 min-h-0"
+          >
+            {syncing ? <Spinner size="sm" /> : "NFTs"}
+          </button>
+          <button
+            type="button"
+            onClick={disconnectWallet}
+            disabled={loading !== null || syncing}
+            title="Disconnect wallet"
+            className="btn-danger px-2 py-1 text-[10px] lg:text-xs shrink-0 disabled:opacity-50 min-h-0"
+          >
+            {loading === "disconnect" ? <Spinner size="sm" /> : <UnlinkIcon className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div className={compact ? "space-y-2" : "space-y-3"}>
         <div className="flex items-center justify-between gap-2 bg-black/20 rounded-xl px-3 py-2.5">
@@ -130,42 +169,39 @@ export function WalletConnect({ walletAddress, onLinked, compact }: WalletConnec
     );
   }
 
+  if (!wcEnabled) {
+    return isHeader ? null : (
+      <p className="text-xs text-[var(--muted)] font-bold text-center">
+        Set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID to enable wallet linking.
+      </p>
+    );
+  }
+
   return (
-    <div className="space-y-2">
+    <div className={isHeader ? "shrink-0" : "space-y-2"}>
+      {/* MetaMask removed — WalletConnect only
+      <button onClick={connectInjected} ...>Connect MetaMask</button>
+      */}
+
       <button
-        onClick={connectInjected}
+        type="button"
+        onClick={connectWithWalletConnect}
         disabled={loading !== null}
-        className="btn-secondary w-full disabled:opacity-50 flex items-center justify-center gap-2.5"
+        className={connectBtnClass}
+        style={{ background: "#3B99FC", color: "#fff" }}
       >
-        <MetaMaskIcon className="w-5 h-5 shrink-0" />
-        {loading === "metamask" ? (
+        <WalletConnectIcon className={isHeader ? "w-4 h-4 lg:w-5 lg:h-5" : "w-6 h-6"} />
+        {loading === "wc" ? (
           <>
             <Spinner size="sm" />
-            Connecting...
+            {isHeader ? "..." : "Opening QR..."}
           </>
+        ) : isHeader ? (
+          "Connect"
         ) : (
-          "Connect MetaMask"
+          "WalletConnect"
         )}
       </button>
-
-      {wcEnabled && (
-        <button
-          onClick={connectWithWalletConnect}
-          disabled={loading !== null}
-          className="w-full disabled:opacity-50 flex items-center justify-center gap-2.5 font-extrabold rounded-xl px-5 py-3 transition-opacity hover:opacity-90"
-          style={{ background: "#3B99FC", color: "#fff" }}
-        >
-          <WalletConnectIcon className="w-6 h-6" />
-          {loading === "wc" ? (
-            <>
-              <Spinner size="sm" />
-              Opening QR...
-            </>
-          ) : (
-            "WalletConnect"
-          )}
-        </button>
-      )}
     </div>
   );
 }

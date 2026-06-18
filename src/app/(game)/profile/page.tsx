@@ -1,8 +1,6 @@
 "use client";
 
-import { GameShell } from "@/components/GameShell";
-import { AppHeader } from "@/components/AppHeader";
-import { WalletConnect } from "@/components/WalletConnect";
+import { ProfileSkeleton } from "@/components/Loading";
 import { UserAvatar } from "@/components/UserAvatar";
 import { usePlayer } from "@/hooks/usePlayer";
 import {
@@ -15,10 +13,13 @@ import {
 } from "@/components/Icons";
 import { apiFetch, clearToken, formatCoins, formatPercent } from "@/lib/api";
 import { getChomperLabelFromPlayer } from "@/lib/chomper";
-import { ProfileSkeleton } from "@/components/Loading";
 
 export default function ProfilePage() {
-  const { player, loading, refresh } = usePlayer();
+  return <ProfileContent />;
+}
+
+function ProfileContent() {
+  const { player, loading } = usePlayer();
 
   async function handleLogout() {
     await apiFetch("/api/auth/logout", { method: "POST" }).catch(() => {});
@@ -35,13 +36,11 @@ export default function ProfilePage() {
   const avatar = player.profilePicUrl || "/images/chomper.jpg";
 
   return (
-    <GameShell>
-      <AppHeader
-        title="PROFILE"
-        icon={<ProfileIcon className="w-6 h-6 text-[var(--blue)] shrink-0" />}
-        zCoins={player.zCoins}
-        backHref="/dashboard"
-      />
+    <>
+      <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
+        <ProfileIcon className="w-6 h-6 text-[var(--blue)] shrink-0" />
+        Profile
+      </h2>
 
       <div className="card text-center mb-4">
         <div className="relative w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden border-4 border-[var(--green)]">
@@ -119,15 +118,6 @@ export default function ProfilePage() {
           </span>
         </div>
       </div>
-
-      <div className="card">
-        <p className="stat-label mb-3">Wallet</p>
-        <WalletConnect
-          walletAddress={player.walletAddress}
-          onLinked={refresh}
-          compact
-        />
-      </div>
-    </GameShell>
+    </>
   );
 }

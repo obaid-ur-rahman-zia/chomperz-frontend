@@ -1,18 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #1e2420;
-  --card: #2b332d;
+  --bg: #141514;
+  --panel: #242524;
+  --card: #2a2b2a;
+  --dark-card: #1d1e1d;
   --text: #f5f6fa;
   --muted: #a4b0af;
-  --gold: #fbc531;
-  --green: #4cd137;
-  --blue: #00a8ff;
-  --danger: #eb4d4b;
+  --gold: #facc15;
+  --green: #22c55e;
+  --green-dark: #15803d;
+  --blue: #0ea5e9;
+  --blue-dark: #0369a1;
+  --danger: #ef4444;
+  --danger-dark: #b91c1c;
+  --game-highlight: rgba(255, 255, 255, 0.14);
+  --game-shadow: rgba(0, 0, 0, 0.45);
 }
 
 @theme inline {
   --color-bg: var(--bg);
+  --color-panel: var(--panel);
   --color-card: var(--card);
   --color-gold: var(--gold);
   --color-green: var(--green);
@@ -28,78 +36,247 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-.page-shell {
-  max-width: 64rem;
-  margin: 0 auto;
-  padding: 1rem 1rem 1.5rem;
+/* ── Surfaces ── */
+
+.bg-panel {
+  background: linear-gradient(180deg, #2f312f 0%, #242524 28%, #1a1b1a 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 12px 40px rgba(0, 0, 0, 0.45);
 }
 
-@media (min-width: 768px) {
-  .page-shell {
-    padding: 1.5rem 1.5rem 2rem;
-  }
+.bg-dark-card,
+.game-inset {
+  background: linear-gradient(180deg, #2a2b2a 0%, #1d1e1d 55%, #141514 100%);
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  border-top-color: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .card {
-  background: var(--card);
-  border-radius: 1.25rem;
+  background: linear-gradient(180deg, #353735 0%, #2a2b2a 38%, #1f201f 100%);
+  border-radius: 0.875rem;
   padding: 1rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 6px 0 rgba(0, 0, 0, 0.28),
+    0 10px 28px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 @media (min-width: 768px) {
   .card {
-    border-radius: 1.5rem;
-    padding: 1.5rem;
+    padding: 1.25rem;
   }
 }
 
+/* ── Pills / chips (header currency, profile) ── */
+
+.game-pill {
+  background: linear-gradient(180deg, #3a3d3a 0%, #252725 55%, #1a1c1a 100%);
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  border-top-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 3px 0 rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.game-pill-gold {
+  background: linear-gradient(180deg, #4a4220 0%, #2e2814 55%, #1f1b0d 100%);
+  border-top-color: rgba(250, 204, 21, 0.35);
+  box-shadow:
+    0 3px 0 rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(250, 204, 21, 0.15);
+}
+
+/* ── Buttons (raised gaming style) ── */
+
 .btn-primary,
 .btn-secondary,
-.btn-danger {
+.btn-danger,
+.btn-nav {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   font-weight: 800;
-  border-radius: 0.75rem;
+  border-radius: 0.625rem;
   padding: 0.75rem 1.25rem;
-  transition: opacity 0.2s;
+  border: 1px solid transparent;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease,
+    filter 0.15s ease;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  position: relative;
+  top: 0;
 }
 
 .btn-primary {
-  background: var(--green);
-  color: #111;
+  color: #0a1a0e;
+  background: linear-gradient(180deg, #6ee78a 0%, #4ade80 18%, #22c55e 52%, #16a34a 100%);
+  border-color: #86efac;
+  border-bottom-color: var(--green-dark);
+  box-shadow:
+    0 4px 0 var(--green-dark),
+    0 6px 14px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
-.btn-secondary {
-  background: var(--blue);
-  color: white;
+.btn-secondary,
+.btn-nav {
+  color: #fff;
+  background: linear-gradient(180deg, #5ecbf8 0%, #38bdf8 20%, #0ea5e9 55%, #0284c7 100%);
+  border-color: #7dd3fc;
+  border-bottom-color: var(--blue-dark);
+  box-shadow:
+    0 4px 0 var(--blue-dark),
+    0 6px 14px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .btn-danger {
-  background: var(--danger);
-  color: white;
+  color: #fff;
+  background: linear-gradient(180deg, #f87171 0%, #ef4444 45%, #dc2626 100%);
+  border-color: #fca5a5;
+  border-bottom-color: var(--danger-dark);
+  box-shadow:
+    0 4px 0 var(--danger-dark),
+    0 6px 14px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .btn-primary:hover,
 .btn-secondary:hover,
-.btn-danger:hover {
-  opacity: 0.9;
+.btn-danger:hover,
+.btn-nav:hover {
+  filter: brightness(1.06);
+}
+
+.btn-primary:active:not(:disabled),
+.btn-secondary:active:not(:disabled),
+.btn-danger:active:not(:disabled),
+.btn-nav:active {
+  transform: translateY(3px);
+}
+
+.btn-primary:active:not(:disabled) {
+  box-shadow:
+    0 1px 0 var(--green-dark),
+    0 3px 8px rgba(0, 0, 0, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-secondary:active:not(:disabled),
+.btn-nav:active {
+  box-shadow:
+    0 1px 0 var(--blue-dark),
+    0 3px 8px rgba(0, 0, 0, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-danger:active:not(:disabled) {
+  box-shadow:
+    0 1px 0 var(--danger-dark),
+    0 3px 8px rgba(0, 0, 0, 0.3),
+    inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled {
+  opacity: 0.55;
+  filter: grayscale(0.25);
+  transform: none;
+  cursor: not-allowed;
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.35),
+    inset 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* Small raised chip buttons */
+.btn-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-weight: 800;
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.65rem;
+  background: linear-gradient(180deg, #5ecbf8 0%, #0ea5e9 55%, #0284c7 100%);
+  border: 1px solid #7dd3fc;
+  border-bottom-color: var(--blue-dark);
+  box-shadow:
+    0 2px 0 var(--blue-dark),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+/* ── Bottom mobile nav ── */
+
+.game-bottom-nav {
+  background: linear-gradient(180deg, #2e312e 0%, #1e211e 40%, #121412 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 -6px 20px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.game-bottom-nav-item-active {
+  background: linear-gradient(180deg, rgba(34, 197, 94, 0.22) 0%, rgba(34, 197, 94, 0.06) 100%);
+  box-shadow: inset 0 1px 0 rgba(134, 239, 172, 0.2);
+}
+
+/* ── Progress bar (gaming) ── */
+
+.game-progress-track {
+  background: linear-gradient(180deg, #0d0e0d 0%, #1a1b1a 100%);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.game-progress-fill {
+  background: linear-gradient(180deg, #6ee78a 0%, #22c55e 50%, #16a34a 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 10px rgba(34, 197, 94, 0.35);
+}
+
+/* ── Misc ── */
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .stat-label {
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.625rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 768px) {
+  .stat-label {
+    font-size: 0.75rem;
+  }
 }
 
 .login-page {
   background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(76, 209, 55, 0.18), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(0, 168, 255, 0.08), transparent),
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34, 197, 94, 0.18), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(14, 165, 233, 0.08), transparent),
     var(--bg);
 }
 
@@ -115,8 +292,20 @@ body {
   }
 }
 
+.skeleton-wrap {
+  background: #252725;
+  border-radius: 0.875rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (min-width: 768px) {
+  .skeleton-wrap {
+    padding: 1.25rem;
+  }
+}
+
 .skeleton {
-  background: linear-gradient(90deg, #2f3832 0%, #3f4a43 50%, #2f3832 100%);
-  background-size: 200% 100%;
+  background-color: #353835;
   animation: skeleton-shimmer 1.4s ease-in-out infinite;
 }

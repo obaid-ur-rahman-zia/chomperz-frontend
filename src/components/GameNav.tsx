@@ -3,33 +3,25 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  ArrowRightIcon,
+  CrownIcon,
+  EditIcon,
   HomeIcon,
   MapIcon,
+  PinIcon,
   ShopIcon,
 } from "@/components/Icons";
 
 const NAV = [
+  { href: "/dashboard", label: "Home", shortLabel: "Home", icon: HomeIcon },
+  { href: "/crib", label: "Crib", shortLabel: "Crib", icon: PinIcon },
+  { href: "/shop", label: "Shop", shortLabel: "Shop", icon: ShopIcon },
+  { href: "/inventory", label: "Inventory", shortLabel: "Inv", icon: EditIcon },
+  { href: "/map", label: "Map", shortLabel: "Map", icon: MapIcon },
   {
-    href: "/crib",
-    label: "My Crib",
-    shortLabel: "Crib",
-    icon: HomeIcon,
-    variant: "secondary" as const,
-  },
-  {
-    href: "/shop",
-    label: "Furniture Shop",
-    shortLabel: "Shop",
-    icon: ShopIcon,
-    variant: "secondary" as const,
-  },
-  {
-    href: "/map",
-    label: "Enter Map",
-    shortLabel: "Map",
-    icon: MapIcon,
-    variant: "primary" as const,
+    href: "/leaderboard",
+    label: "Leaderboard",
+    shortLabel: "Rank",
+    icon: CrownIcon,
   },
 ] as const;
 
@@ -37,31 +29,53 @@ export function GameNav() {
   const pathname = usePathname();
 
   return (
-    <nav
-      aria-label="Game navigation"
-      className="sticky top-0 z-40 -mx-1 mb-4 grid grid-cols-3 gap-2 rounded-2xl border border-white/10 bg-[#1a1f1c]/95 p-2 backdrop-blur-md sm:gap-3 sm:p-2.5"
-    >
-      {NAV.map(({ href, label, shortLabel, icon: Icon, variant }) => {
-        const active = pathname === href;
-        const btnClass = variant === "primary" ? "btn-primary" : "btn-secondary";
+    <>
+      {/* Desktop: top tab bar */}
+      <nav
+        aria-label="Game navigation"
+        className="hidden lg:grid lg:grid-cols-6 gap-3 mb-6"
+      >
+        {NAV.map(({ href, label }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`btn-nav py-2 px-3 text-sm shadow-lg no-underline ${
+                active ? "ring-2 ring-white/25" : ""
+              }`}
+            >
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
 
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={`${btnClass} py-2.5 sm:py-3 text-[11px] sm:text-sm no-underline justify-center min-w-0 ${
-              active ? "ring-2 ring-white/25" : ""
-            }`}
-          >
-            <Icon className="w-4 h-4 shrink-0" />
-            <span className="truncate hidden min-[380px]:inline">{label}</span>
-            <span className="truncate min-[380px]:hidden">{shortLabel}</span>
-            {href === "/map" && (
-              <ArrowRightIcon className="w-3.5 h-3.5 opacity-80 shrink-0 hidden sm:block" />
-            )}
-          </Link>
-        );
-      })}
-    </nav>
+      {/* Mobile: fixed bottom nav */}
+      <nav
+        aria-label="Mobile game navigation"
+        className="game-bottom-nav fixed bottom-0 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)] lg:hidden"
+      >
+        <div className="flex justify-around items-stretch max-w-lg mx-auto">
+          {NAV.map(({ href, shortLabel, icon: Icon }) => {
+            const active = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 text-[10px] font-extrabold no-underline transition-all min-w-0 px-0.5 ${
+                  active
+                    ? "game-bottom-nav-item-active text-[var(--green)]"
+                    : "text-[var(--muted)]"
+                }`}
+              >
+                <Icon className="w-5 h-5 shrink-0" />
+                <span className="truncate w-full text-center">{shortLabel}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </>
   );
 }

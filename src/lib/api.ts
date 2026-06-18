@@ -24,6 +24,52 @@ export interface OwnedNft {
   rarity: "common" | "uncommon" | "rare" | "legendary";
 }
 
+export interface ActionStatus {
+  state: "idle" | "running" | "completed";
+  skill: string | null;
+  progressPct: number;
+  secondsRemaining: number;
+  startedAt: string | null;
+  durationMs: number | null;
+}
+
+export interface ActiveSkillEntry {
+  id: string;
+  label: string;
+  level: number;
+  xp: number;
+  xpToNext: number;
+  upgradeCost: number;
+  rewardItemId: string;
+  rewardItemLabel: string;
+  successPct: number;
+  failPct: number;
+}
+
+export interface ActiveSkillsState {
+  selectedSkill: string;
+  skills: ActiveSkillEntry[];
+  selected: ActiveSkillEntry & {
+    inventoryQty: number;
+  };
+  action: ActionStatus;
+}
+
+export interface InventoryStack {
+  itemId: string;
+  name: string;
+  shortLabel: string;
+  quantity: number;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  userId: string;
+  username: string;
+  profilePicUrl: string;
+  value: number;
+}
+
 export interface PlayerData {
   id: string;
   twitterId: string;
@@ -40,12 +86,16 @@ export interface PlayerData {
   lastClaimAt: string;
   powerLvl: number;
   speedLvl: number;
+  speedUpgradingUntil?: string | null;
+  speedUpgradeRemainingMs?: number;
+  isSpeedUpgrading?: boolean;
   powerUpgradeCost: number;
   speedUpgradeCost: number;
   cachedNftCount: number;
   cachedTokenIds?: number[];
   nfts: OwnedNft[];
   chomperLabel: string;
+  activeSkills?: ActiveSkillsState;
   economy: PlayerEconomy;
 }
 
@@ -128,6 +178,14 @@ export function formatCoins(value: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 4,
   });
+}
+
+export function formatDuration(ms: number): string {
+  const totalSec = Math.max(0, Math.ceil(ms / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":");
 }
 
 export function getToken(): string | null {

@@ -1,19 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { usePlayer } from "@/hooks/usePlayer";
 import { WalletConnect } from "@/components/WalletConnect";
 import { UserMenu } from "@/components/UserMenu";
 import { GameShell } from "@/components/GameShell";
 import {
-  ArrowRightIcon,
   BoltIcon,
   CoinIcon,
-  HomeIcon,
-  MapIcon,
-  ShopIcon,
   SpeedIcon,
   StatusDot,
   TrendIcon,
@@ -23,7 +18,7 @@ import {
   formatCoins,
   formatPercent,
 } from "@/lib/api";
-import { getChomperLabel } from "@/lib/chomper";
+import { getChomperLabelFromPlayer } from "@/lib/chomper";
 import { toast } from "@/lib/toast";
 import { DashboardSkeleton, Spinner } from "@/components/Loading";
 
@@ -31,6 +26,7 @@ export default function DashboardPage() {
   const { player, loading, refresh } = usePlayer();
   const [claiming, setClaiming] = useState(false);
   const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [dailyTaskLoading, setDailyTaskLoading] = useState(false);
 
   async function handleClaim() {
     setClaiming(true);
@@ -45,6 +41,21 @@ export default function DashboardPage() {
       toast.error(e instanceof Error ? e.message : "Claim failed");
     } finally {
       setClaiming(false);
+    }
+  }
+
+  async function handleDailyTask() {
+    setDailyTaskLoading(true);
+    try {
+      const data = await apiFetch<{ awarded: number }>("/api/player/daily-task", {
+        method: "POST",
+      });
+      toast.success(`Earned ${data.awarded} Coins!`);
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Daily task failed");
+    } finally {
+      setDailyTaskLoading(false);
     }
   }
 
@@ -69,8 +80,7 @@ export default function DashboardPage() {
   }
 
   const { economy } = player;
-  const tokenIds = player.cachedTokenIds ?? [];
-  const chomperLabel = getChomperLabel(tokenIds.length ? tokenIds : [4242]);
+  const chomperLabel = getChomperLabelFromPlayer(player);
 
   return (
     <GameShell>
@@ -78,10 +88,13 @@ export default function DashboardPage() {
         <h1 className="text-xl sm:text-2xl font-black tracking-wide text-center sm:text-left">
           CHOMPERZ BASECAMP
         </h1>
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-2 flex-wrap">
           <span className="bg-black/30 border-2 border-[#3a453d] rounded-full px-3 py-1.5 font-extrabold text-[var(--gold)] text-sm flex items-center gap-1.5">
             <CoinIcon className="w-4 h-4" />
-            {formatCoins(player.zCoins)}
+            {formatCoins(player.zCoins)} Z
+          </span>
+          <span className="bg-black/30 border-2 border-[#3a453d] rounded-full px-3 py-1.5 font-extrabold text-[var(--blue)] text-sm">
+            {formatCoins(player.coins ?? 0)} Coins
           </span>
           <UserMenu
             twitterHandle={player.twitterHandle}
@@ -141,7 +154,38 @@ export default function DashboardPage() {
           </div>
 
           <div className="card">
-            <p className="stat-label">Earning Rate</p>
+            <p className="stat-label">Standard Coins</p>
+            <p className="text-lg sm:text-xl font-extrabold text-[var(--blue)]">
+              {formatCoins(player.coins ?? 0)} Coins
+            </p>
+            <button
+              onClick={handleDailyTask}
+              disabled={dailyTaskLoading}
+              className="btn-secondary w-full mt-3 text-sm disabled:opacity-50"
+            >
+              {dailyTaskLoading ? (
+                <>
+                  <Spinner size="sm" />
+                  Claiming...
+                </>
+              ) : (
+                "Claim Daily Task"
+              )}
+            </button>
+          </div>
+
+        <div className="card">
+          <p className="stat-label">NFT Multiplier</p>
+          <p className="text-lg sm:text-xl font-extrabold text-[var(--green)]">
+            {player.multiplier.toFixed(2)}x
+          </p>
+          <p className="text-xs text-[var(--muted)] font-bold mt-1">
+            {player.nftCount} NFT{player.nftCount === 1 ? "" : "s"} synced
+          </p>
+        </div>
+
+        <div className="card">
+          <p className="stat-label">Earning Rate</p>
             <p className="text-lg sm:text-xl font-extrabold text-[var(--green)] flex items-center gap-2">
               <TrendIcon className="w-5 h-5 shrink-0" />
               +{formatCoins(economy.dailyRate)} / Day
@@ -215,22 +259,6 @@ export default function DashboardPage() {
             />
           </div>
         </div>
-      </div>
-
-      <div className="hidden md:grid grid-cols-3 gap-3 mt-6">
-        <Link href="/crib" className="btn-secondary py-3 no-underline">
-          <HomeIcon className="w-4 h-4" />
-          My Crib
-        </Link>
-        <Link href="/shop" className="btn-secondary py-3 no-underline">
-          <ShopIcon className="w-4 h-4" />
-          Furniture Shop
-        </Link>
-        <Link href="/map" className="btn-primary py-3 no-underline">
-          <MapIcon className="w-4 h-4" />
-          Enter Map
-          <ArrowRightIcon className="w-4 h-4 opacity-80" />
-        </Link>
       </div>
     </GameShell>
   );

@@ -19,19 +19,33 @@ export interface PlayerEconomy {
   pendingEarnings: number;
 }
 
+export interface OwnedNft {
+  tokenId: number;
+  rarity: "common" | "uncommon" | "rare" | "legendary";
+}
+
 export interface PlayerData {
   id: string;
+  twitterId: string;
   twitterHandle: string;
+  username: string;
   profilePicUrl: string;
   walletAddress: string | null;
+  nftCount: number;
+  multiplier: number;
   zCoins: number;
+  coins: number;
+  lastLoginAt: string;
+  lastClaimedAt: string;
+  lastClaimAt: string;
   powerLvl: number;
   speedLvl: number;
   powerUpgradeCost: number;
   speedUpgradeCost: number;
-  lastClaimedAt: string;
   cachedNftCount: number;
   cachedTokenIds?: number[];
+  nfts: OwnedNft[];
+  chomperLabel: string;
   economy: PlayerEconomy;
 }
 
@@ -92,8 +106,14 @@ export async function apiFetch<T>(
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || "Request failed");
+    const err = (await res.json().catch(() => ({ error: res.statusText }))) as {
+      error?: string;
+      code?: string;
+    };
+    const message = err.error || "Request failed";
+    const error = new Error(message) as Error & { code?: string };
+    if (err.code) error.code = err.code;
+    throw error;
   }
 
   return res.json() as Promise<T>;

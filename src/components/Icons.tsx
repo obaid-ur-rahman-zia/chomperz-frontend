@@ -322,3 +322,15 @@ export function ChevronDownIcon({ className = "w-5 h-5" }: IconProps) {
     </svg>
   );
 }
+
+export function WalletConnectIcon({ className = "w-5 h-5" }: IconProps) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/images/walletconnect.jpeg"
+      alt=""
+      aria-hidden
+      className={`shrink-0 rounded-md ${className}`}
+    />
+  );
+}

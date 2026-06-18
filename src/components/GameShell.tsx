@@ -1,11 +1,11 @@
 import { ReactNode } from "react";
-import { MobileNav } from "@/components/MobileNav";
+import { GameNav } from "@/components/GameNav";
 
 export function GameShell({ children }: { children: ReactNode }) {
   return (
-    <>
-      <div className="page-shell">{children}</div>
-      <MobileNav />
-    </>
+    <div className="page-shell">
+      <GameNav />
+      {children}
+    </div>
   );
 }

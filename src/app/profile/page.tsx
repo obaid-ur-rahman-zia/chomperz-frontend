@@ -14,7 +14,7 @@ import {
   TrendIcon,
 } from "@/components/Icons";
 import { apiFetch, clearToken, formatCoins, formatPercent } from "@/lib/api";
-import { getChomperLabel } from "@/lib/chomper";
+import { getChomperLabelFromPlayer } from "@/lib/chomper";
 import { ProfileSkeleton } from "@/components/Loading";
 
 export default function ProfilePage() {
@@ -31,8 +31,7 @@ export default function ProfilePage() {
   }
 
   const { economy } = player;
-  const tokenIds = player.cachedTokenIds ?? [];
-  const chomperLabel = getChomperLabel(tokenIds.length ? tokenIds : [4242]);
+  const chomperLabel = getChomperLabelFromPlayer(player);
   const avatar = player.profilePicUrl || "/images/chomper.jpg";
 
   return (
@@ -61,10 +60,16 @@ export default function ProfilePage() {
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="card">
-          <p className="stat-label">Balance</p>
+          <p className="stat-label">Z-Coins</p>
           <p className="font-black text-[var(--gold)] flex items-center gap-1 text-lg">
             <CoinIcon className="w-5 h-5" />
             {formatCoins(player.zCoins)}
+          </p>
+        </div>
+        <div className="card">
+          <p className="stat-label">Coins</p>
+          <p className="font-black text-[var(--blue)] text-lg">
+            {formatCoins(player.coins ?? 0)}
           </p>
         </div>
         <div className="card">
@@ -76,11 +81,11 @@ export default function ProfilePage() {
         </div>
         <div className="card">
           <p className="stat-label">NFTs</p>
-          <p className="font-black text-xl">{economy.nftCount}</p>
+          <p className="font-black text-xl">{player.nftCount}</p>
         </div>
         <div className="card">
           <p className="stat-label">Multiplier</p>
-          <p className="font-black text-xl">{economy.nftMultiplier.toFixed(2)}x</p>
+          <p className="font-black text-xl">{player.multiplier.toFixed(2)}x</p>
         </div>
       </div>
 

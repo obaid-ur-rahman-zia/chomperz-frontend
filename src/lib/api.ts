@@ -125,6 +125,8 @@ export interface PlotSummary {
   landlordHandle?: string | null;
   landlordAvatarUrl?: string | null;
   status: string;
+  lastClaimAt?: string | null;
+  abandonedAt?: string | null;
   renters: PlotRenter[];
 }
 
@@ -133,6 +135,9 @@ export interface PlotDetail extends PlotSummary {
   displayId?: string;
   minBid?: number;
   purchasePrice?: number | null;
+  canTakeover?: boolean;
+  canClaimLand?: boolean;
+  claimRemainingMs?: number | null;
   landlordTaxPct?: number;
 }
 

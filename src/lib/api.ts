@@ -35,6 +35,15 @@ export interface ActionStatus {
   durationMs: number | null;
 }
 
+export interface PlayerSkillEntry {
+  skillName: string;
+  level: number;
+  xp: number;
+  active: boolean;
+  actionDurationMs: number;
+  successPct: number;
+}
+
 export interface ActiveSkillEntry {
   id: string;
   label: string;
@@ -47,14 +56,18 @@ export interface ActiveSkillEntry {
   failPct: number;
   inputItemId?: string | null;
   inputQuantity?: number;
+  actionDurationMs?: number;
 }
 
 export interface ActiveSkillsState {
   selectedSkill: string;
+  playerSkills?: PlayerSkillEntry[];
   skills: ActiveSkillEntry[];
   selected: ActiveSkillEntry & {
     inventoryQty: number;
     inputQty?: number;
+    actionDurationMs?: number;
+    actionDurationSec?: number;
   };
   action: ActionStatus;
 }
@@ -136,8 +149,7 @@ export interface PlotDetail extends PlotSummary {
   minBid?: number;
   purchasePrice?: number | null;
   canTakeover?: boolean;
-  canClaimLand?: boolean;
-  claimRemainingMs?: number | null;
+  loginRemainingMs?: number | null;
   landlordTaxPct?: number;
 }
 

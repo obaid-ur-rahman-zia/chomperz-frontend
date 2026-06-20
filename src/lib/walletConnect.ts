@@ -7,6 +7,11 @@ export function getWalletConnectProjectId(): string | null {
   return process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID?.trim() || null;
 }
 
+export function isMetaMaskEnabled(): boolean {
+  const v = process.env.NEXT_PUBLIC_METAMASK?.trim().toLowerCase();
+  return v === "true" || v === "1" || v === "yes";
+}
+
 export async function connectWalletConnectProvider() {
   if (typeof window === "undefined") {
     throw new Error("WalletConnect is only available in the browser.");

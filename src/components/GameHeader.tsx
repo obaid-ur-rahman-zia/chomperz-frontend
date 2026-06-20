@@ -40,13 +40,6 @@ export function GameHeader() {
         <h1 className="text-lg lg:text-2xl font-black tracking-wide uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] lg:hidden">
           ChomperZ Idle
         </h1>
-        <div className="lg:hidden shrink-0">
-          <WalletConnect
-            variant="header"
-            walletAddress={player.walletAddress}
-            onLinked={() => refresh({ silent: true })}
-          />
-        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-2">
@@ -65,13 +58,11 @@ export function GameHeader() {
             <span className="tabular-nums">{formatCoins(player.zCoins)}</span>
           </div>
 
-          <div className="hidden lg:flex shrink-0">
-            <WalletConnect
-              variant="header"
-              walletAddress={player.walletAddress}
-              onLinked={() => refresh({ silent: true })}
-            />
-          </div>
+          <WalletConnect
+            variant="header"
+            walletAddress={player.walletAddress}
+            onLinked={() => refresh({ silent: true })}
+          />
 
           <UserMenu
             twitterHandle={player.twitterHandle}

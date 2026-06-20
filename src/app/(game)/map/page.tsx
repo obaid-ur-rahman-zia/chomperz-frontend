@@ -48,7 +48,6 @@ function patchToSummary(patch: PlotPatchPayload): Partial<PlotSummary> {
     ownerWallet: patch.ownerWallet,
     landlordHandle: patch.landlordHandle,
     status: patch.status,
-    lastClaimAt: patch.lastClaimAt,
     abandonedAt: patch.abandonedAt,
     renters: patch.renters,
   };
@@ -63,9 +62,8 @@ export default function MapPage() {
   const [bidAmount, setBidAmount] = useState("");
   const [bidding, setBidding] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
-  const [claiming, setClaiming] = useState(false);
   const [takingOver, setTakingOver] = useState(false);
-  const [countdownMs, setCountdownMs] = useState<number | null>(null);
+  const [loginCountdownMs, setLoginCountdownMs] = useState<number | null>(null);
 
   const zCoins = player?.zCoins ?? null;
 
@@ -74,7 +72,7 @@ export default function MapPage() {
     const refreshed = await apiFetch<{ plot: PlotDetail }>(`/api/plots/${selectedId}`);
     setDetail(refreshed.plot);
     setBidAmount(String(refreshed.plot.minBid ?? 7));
-    setCountdownMs(refreshed.plot.claimRemainingMs ?? null);
+    setLoginCountdownMs(refreshed.plot.loginRemainingMs ?? null);
   }, [selectedId]);
 
   useEffect(() => {
@@ -97,12 +95,12 @@ export default function MapPage() {
   }, [selectedId, refreshDetail]);
 
   useEffect(() => {
-    if (countdownMs === null) return;
+    if (loginCountdownMs === null) return;
     const timer = setInterval(() => {
-      setCountdownMs((prev) => (prev === null ? null : Math.max(0, prev - 1000)));
+      setLoginCountdownMs((prev) => (prev === null ? null : Math.max(0, prev - 1000)));
     }, 1000);
     return () => clearInterval(timer);
-  }, [countdownMs]);
+  }, [loginCountdownMs]);
 
   const handleSocketEvent = useCallback(
     (event: string, payload: Record<string, unknown>) => {
@@ -130,10 +128,6 @@ export default function MapPage() {
     (patch: PlotPatchPayload) => {
       if (selectedId === patch.plotId && detail) {
         setDetail({ ...detail, ...patchToSummary(patch) });
-        if (patch.lastClaimAt) {
-          const elapsed = Date.now() - new Date(patch.lastClaimAt).getTime();
-          setCountdownMs(Math.max(0, 7 * 24 * 60 * 60 * 1000 - elapsed));
-        }
       }
     },
     [selectedId, detail]
@@ -157,20 +151,6 @@ export default function MapPage() {
       toast.error(e instanceof Error ? e.message : "Purchase failed");
     } finally {
       setPurchasing(false);
-    }
-  }
-
-  async function handleClaimLand() {
-    if (selectedId === null) return;
-    setClaiming(true);
-    try {
-      await apiFetch(`/api/plots/${selectedId}/claim-land`, { method: "POST" });
-      toast.success("Land claimed — 7-day timer reset!");
-      await refreshDetail();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Claim failed");
-    } finally {
-      setClaiming(false);
     }
   }
 
@@ -218,9 +198,16 @@ export default function MapPage() {
 
   const canPurchase =
     detail?.purchasePrice != null && detail.status === "unclaimed" && !detail.isLegendary;
-  const canClaim = detail?.canClaimLand === true;
   const canTakeover = detail?.canTakeover === true;
   const canBid = detail?.status === "owned" && detail.landlordHandle && !detail.isLegendary;
+  const showLegendaryNftHint =
+    detail?.isLegendary === true &&
+    detail.status === "unclaimed" &&
+    !detail.landlordHandle &&
+    !detail.ownerWallet;
+  const legendaryNftId = detail?.legendaryTokenId ?? (detail ? detail.plotId + 1 : null);
+  const showLoginWarning =
+    detail?.loginRemainingMs != null && detail.loginRemainingMs > 0;
 
   return (
     <>
@@ -257,7 +244,7 @@ export default function MapPage() {
               <CrownIcon className="text-[var(--gold)]" />
               <span><span className="text-[var(--gold)]">Gold</span> = Legendary (NFT-linked)</span>
             </p>
-            <p><span className="text-[var(--green)]">Green</span> = Owned frontier · <span className="text-red-400">Red</span> = Abandoned · Gray = Unclaimed</p>
+            <p><span className="text-[var(--green)]">Green</span> = Owned · <span className="text-red-400">Red</span> = Abandoned · Log in every 7 days to keep land</p>
           </div>
         </div>
 
@@ -274,10 +261,24 @@ export default function MapPage() {
                 {detail.isLegendary && detail.legendaryTokenId != null && (
                   <> · NFT #{detail.legendaryTokenId}</>
                 )}
-                {!detail.isLegendary && detail.status === "owned" && countdownMs !== null && (
-                  <> · Claim within {formatDuration(countdownMs)}</>
+                {!detail.isLegendary && showLoginWarning && loginCountdownMs !== null && (
+                  <> · Log in within {formatDuration(loginCountdownMs)} to keep land</>
                 )}
               </p>
+
+              {showLegendaryNftHint && legendaryNftId != null && (
+                <div className="mb-4 p-4 bg-black/25 rounded-2xl border border-[var(--gold)]/30">
+                  <p className="text-sm font-bold text-gray-300 mb-2 flex items-center gap-1.5">
+                    <CrownIcon className="text-[var(--gold)] w-4 h-4 shrink-0" />
+                    Crown Land — not for sale
+                  </p>
+                  <p className="text-xs text-[var(--muted)] font-bold leading-relaxed">
+                    Own Chomperz NFT #{legendaryNftId} in your linked wallet, then tap{" "}
+                    <span className="text-[var(--gold)]">NFTs</span> in the header to sync. This plot
+                    cannot be purchased with Z-Coins.
+                  </p>
+                </div>
+              )}
 
               {canPurchase && (
                 <div className="mb-4 p-4 bg-black/25 rounded-2xl border border-[var(--green)]/30">
@@ -294,23 +295,16 @@ export default function MapPage() {
                 </div>
               )}
 
-              {canClaim && (
-                <div className="mb-4 p-4 bg-black/25 rounded-2xl border border-[var(--green)]/30">
-                  <p className="text-sm font-bold text-gray-300 mb-2">
-                    Reset your 7-day activity timer to keep this plot
+              {showLoginWarning && (
+                <div className="mb-4 p-4 bg-black/25 rounded-2xl border border-[var(--gold)]/30">
+                  <p className="text-sm font-bold text-gray-300 mb-1">
+                    FORMULAS.md: log in at least once every 7 days to keep this plot
                   </p>
-                  {countdownMs !== null && (
-                    <p className="text-xs text-[var(--gold)] font-bold mb-3">
-                      Time remaining: {formatDuration(countdownMs)}
+                  {loginCountdownMs !== null && (
+                    <p className="text-xs text-[var(--gold)] font-bold">
+                      Time until land is lost: {formatDuration(loginCountdownMs)}
                     </p>
                   )}
-                  <button
-                    onClick={handleClaimLand}
-                    disabled={claiming}
-                    className="btn-primary w-full disabled:opacity-50"
-                  >
-                    {claiming ? <Spinner size="sm" /> : "Claim Land"}
-                  </button>
                 </div>
               )}
 

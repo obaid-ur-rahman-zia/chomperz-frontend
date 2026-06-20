@@ -74,7 +74,7 @@ function LoginContent() {
               src={imgSrc}
               alt="Chomperz mascot"
               fill
-              className="object-contain p-4 sm:p-6"
+              className="object-contain"
               priority
               onError={() => setImgSrc("/chomper.svg")}
             />

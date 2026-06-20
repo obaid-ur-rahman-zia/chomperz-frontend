@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { linkWalletWithProvider } from "@/lib/walletLink";
+import { linkWalletWithProvider, getMetaMaskProvider, formatWalletLinkError } from "@/lib/walletLink";
 import {
   connectWalletConnectProvider,
   disconnectWalletConnectSession,
   getWalletConnectProjectId,
+  isMetaMaskEnabled,
 } from "@/lib/walletConnect";
-import { UnlinkIcon, WalletConnectIcon } from "@/components/Icons";
+import { MetaMaskIcon, UnlinkIcon, WalletConnectIcon } from "@/components/Icons";
 import { Spinner } from "@/components/Loading";
 
 interface WalletConnectProps {
@@ -24,10 +25,7 @@ function walletErrorMessage(e: unknown): string {
   if (err.code === "wallet_linked_elsewhere" || err.code === "wallet_already_linked") {
     return err.message;
   }
-  if (err.message?.includes("User rejected") || err.message?.includes("rejected")) {
-    return "Connection cancelled.";
-  }
-  return err.message || "Wallet connection failed";
+  return formatWalletLinkError(e);
 }
 
 export function WalletConnect({
@@ -39,27 +37,30 @@ export function WalletConnect({
   const [loading, setLoading] = useState<"metamask" | "wc" | "disconnect" | null>(null);
   const [syncing, setSyncing] = useState(false);
   const wcEnabled = Boolean(getWalletConnectProjectId());
+  const metamaskEnabled = isMetaMaskEnabled();
   const isHeader = variant === "header";
 
-  // MetaMask disabled — WalletConnect only
-  // async function connectInjected() {
-  //   if (typeof window === "undefined" || !window.ethereum) {
-  //     toast.error("MetaMask not detected. Use WalletConnect on mobile.");
-  //     return;
-  //   }
-  //   setLoading("metamask");
-  //   try {
-  //     await linkWalletWithProvider(window.ethereum);
-  //     toast.success("Wallet connected & NFTs synced!");
-  //     onLinked();
-  //   } catch (e) {
-  //     toast.error(walletErrorMessage(e));
-  //   } finally {
-  //     setLoading(null);
-  //   }
-  // }
+  async function connectInjected() {
+    if (loading !== null) return;
+    const injected = getMetaMaskProvider();
+    if (!injected) {
+      toast.error("MetaMask not detected. Install the extension or use WalletConnect.");
+      return;
+    }
+    setLoading("metamask");
+    try {
+      await linkWalletWithProvider(injected);
+      toast.success("Wallet connected & NFTs synced!");
+      onLinked();
+    } catch (e) {
+      toast.error(walletErrorMessage(e));
+    } finally {
+      setLoading(null);
+    }
+  }
 
   async function connectWithWalletConnect() {
+    if (loading !== null) return;
     setLoading("wc");
     try {
       const wc = await connectWalletConnectProvider();
@@ -169,48 +170,59 @@ export function WalletConnect({
     );
   }
 
-  if (!wcEnabled) {
+  if (!wcEnabled && !metamaskEnabled) {
     return isHeader ? null : (
       <p className="text-xs text-[var(--muted)] font-bold text-center">
-        Set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID to enable wallet linking.
+        Enable NEXT_PUBLIC_METAMASK=true and/or set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID.
       </p>
     );
   }
 
   return (
-    <div className={isHeader ? "shrink-0" : "space-y-2"}>
-      {/* MetaMask removed — WalletConnect only
-      <button onClick={connectInjected} ...>Connect MetaMask</button>
-      */}
+    <div className={isHeader ? "flex items-center gap-1 shrink-0" : "space-y-2"}>
+      {metamaskEnabled && (
+        <button
+          type="button"
+          onClick={connectInjected}
+          disabled={loading !== null}
+          className={connectBtnClass}
+          style={{ background: "#f6851b", color: "#fff" }}
+        >
+          <MetaMaskIcon className={isHeader ? "w-4 h-4 lg:w-5 lg:h-5" : "w-6 h-6"} />
+          {loading === "metamask" ? (
+            <>
+              <Spinner size="sm" />
+              {isHeader ? "..." : "Connecting..."}
+            </>
+          ) : isHeader ? (
+            "MetaMask"
+          ) : (
+            "Connect MetaMask"
+          )}
+        </button>
+      )}
 
-      <button
-        type="button"
-        onClick={connectWithWalletConnect}
-        disabled={loading !== null}
-        className={connectBtnClass}
-        style={{ background: "#3B99FC", color: "#fff" }}
-      >
-        <WalletConnectIcon className={isHeader ? "w-4 h-4 lg:w-5 lg:h-5" : "w-6 h-6"} />
-        {loading === "wc" ? (
-          <>
-            <Spinner size="sm" />
-            {isHeader ? "..." : "Opening QR..."}
-          </>
-        ) : isHeader ? (
-          "Connect"
-        ) : (
-          "WalletConnect"
-        )}
-      </button>
+      {wcEnabled && (
+        <button
+          type="button"
+          onClick={connectWithWalletConnect}
+          disabled={loading !== null}
+          className={connectBtnClass}
+          style={{ background: "#3B99FC", color: "#fff" }}
+        >
+          <WalletConnectIcon className={isHeader ? "w-4 h-4 lg:w-5 lg:h-5" : "w-6 h-6"} />
+          {loading === "wc" ? (
+            <>
+              <Spinner size="sm" />
+              {isHeader ? "..." : "Opening QR..."}
+            </>
+          ) : isHeader ? (
+            "WC"
+          ) : (
+            "WalletConnect"
+          )}
+        </button>
+      )}
     </div>
   );
-}
-
-declare global {
-  interface Window {
-    ethereum?: {
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-      isMetaMask?: boolean;
-    };
-  }
 }

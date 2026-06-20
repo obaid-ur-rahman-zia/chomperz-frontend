@@ -114,7 +114,12 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
 
   return (
     <div className="card flex flex-col gap-3 md:gap-4">
-      <h3 className="stat-label mb-0.5">Active Skills</h3>
+      <div className="flex items-start justify-between gap-2">
+        <h3 className="stat-label mb-0.5">Active Skills</h3>
+        <span className="text-[9px] font-bold text-[var(--gold)] uppercase tracking-wide">
+          FORMULAS.md
+        </span>
+      </div>
 
       <div className="grid grid-cols-2 gap-2 md:gap-3">
         {skills.skills.map((skill) => {
@@ -159,6 +164,9 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
         <div className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wider">
           Action Rewards
         </div>
+        <p className="text-[10px] text-gray-500 font-bold">
+          Timer: {selected.actionDurationSec ?? selected.actionDurationMs! / 1000}s fixed per FORMULAS.md
+        </p>
         <div className="grid grid-cols-2 gap-1.5 md:gap-2">
           <div className="bg-black/40 border border-green-900/50 rounded flex justify-between items-center px-2 py-1 md:px-2.5 md:py-1.5">
             <span className="text-[10px] md:text-xs text-gray-300">{selected.rewardItemLabel}</span>

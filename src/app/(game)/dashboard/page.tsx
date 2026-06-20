@@ -17,8 +17,8 @@ import {
   formatDuration,
   formatPercent,
 } from "@/lib/api";
-import { MIN_ZCOIN_CLAIM } from "@/lib/economy";
-import { useDailyTaskStatus, useLivePendingZCoins } from "@/hooks/useLiveEarnings";
+import { MIN_ZCOIN_CLAIM, MIN_COIN_CLAIM } from "@/lib/economy";
+import { useLivePendingCoins, useLivePendingZCoins } from "@/hooks/useLiveEarnings";
 import { getChomperLabelFromPlayer } from "@/lib/chomper";
 import { toast } from "@/lib/toast";
 
@@ -36,16 +36,18 @@ export default function DashboardPage() {
 
 function DashboardContent() {
   const { player, loading, refresh } = usePlayer();
-  const [claiming, setClaiming] = useState(false);
+  const [claimingZ, setClaimingZ] = useState(false);
+  const [claimingCoins, setClaimingCoins] = useState(false);
   const [upgrading, setUpgrading] = useState<string | null>(null);
-  const [dailyTaskLoading, setDailyTaskLoading] = useState(false);
   const [speedRemaining, setSpeedRemaining] = useState(0);
+  const [powerRemaining, setPowerRemaining] = useState(0);
 
   const dailyRate = player?.economy.dailyRate ?? 0;
+  const coinsDailyRate = player?.economy.coinsDailyRate ?? 5;
   const livePendingZ = useLivePendingZCoins(dailyRate, player?.lastClaimAt ?? null);
-  const dailyTask = useDailyTaskStatus(player?.lastDailyTaskAt ?? null);
+  const livePendingCoins = useLivePendingCoins(player?.lastCoinsClaimAt ?? null);
   const canClaimZ = livePendingZ >= MIN_ZCOIN_CLAIM;
-  const canClaimDaily = dailyTask.available;
+  const canClaimCoins = livePendingCoins >= MIN_COIN_CLAIM;
 
   useEffect(() => {
     if (!player?.isSpeedUpgrading) {
@@ -59,9 +61,21 @@ function DashboardContent() {
     return () => clearInterval(id);
   }, [player?.isSpeedUpgrading, player?.speedUpgradeRemainingMs]);
 
-  async function handleClaim() {
+  useEffect(() => {
+    if (!player?.isPowerUpgrading) {
+      setPowerRemaining(0);
+      return;
+    }
+    setPowerRemaining(player.powerUpgradeRemainingMs ?? 0);
+    const id = setInterval(() => {
+      setPowerRemaining((ms) => Math.max(0, ms - 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [player?.isPowerUpgrading, player?.powerUpgradeRemainingMs]);
+
+  async function handleClaimZ() {
     if (!canClaimZ) return;
-    setClaiming(true);
+    setClaimingZ(true);
     try {
       const data = await apiFetch<{ earned: number; zCoins: number }>(
         "/api/player/claim",
@@ -72,23 +86,24 @@ function DashboardContent() {
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Claim failed");
     } finally {
-      setClaiming(false);
+      setClaimingZ(false);
     }
   }
 
-  async function handleDailyTask() {
-    if (!canClaimDaily) return;
-    setDailyTaskLoading(true);
+  async function handleClaimCoins() {
+    if (!canClaimCoins) return;
+    setClaimingCoins(true);
     try {
-      const data = await apiFetch<{ awarded: number }>("/api/player/daily-task", {
-        method: "POST",
-      });
-      toast.success(`Earned ${data.awarded} Coins!`);
+      const data = await apiFetch<{ earned: number; coins: number }>(
+        "/api/player/claim-coins",
+        { method: "POST" }
+      );
+      toast.success(`Claimed ${formatCoins(data.earned)} Coins!`);
       await refresh({ silent: true });
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Daily task failed");
+      toast.error(e instanceof Error ? e.message : "Claim failed");
     } finally {
-      setDailyTaskLoading(false);
+      setClaimingCoins(false);
     }
   }
 
@@ -100,7 +115,7 @@ function DashboardContent() {
         body: JSON.stringify({ stat }),
       });
       toast.success(
-        stat === "power" ? "Power upgraded!" : "Speed upgrade started (12h)!"
+        stat === "power" ? "Power upgrade started!" : "Speed upgrade started!"
       );
       await refresh({ silent: true });
     } catch (e) {
@@ -118,6 +133,7 @@ function DashboardContent() {
   const chomperLabel = getChomperLabelFromPlayer(player);
   const activeSkills = player.activeSkills;
   const speedUpgrading = player.isSpeedUpgrading && speedRemaining > 0;
+  const powerUpgrading = player.isPowerUpgrading && powerRemaining > 0;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
@@ -160,27 +176,55 @@ function DashboardContent() {
             <div className="pt-4 border-t border-gray-700/50">
               <h3 className="stat-label mb-2 md:mb-3">Stat Upgrades</h3>
               <div className="flex flex-col gap-2 md:gap-3">
-                <div className="bg-dark-card p-2 md:p-3 rounded-lg flex justify-between items-center">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <BoltIcon className="w-6 h-6 text-[var(--gold)] shrink-0" />
-                    <div>
-                      <div className="font-bold text-xs md:text-sm text-gray-200">
-                        Power (Lvl {player.powerLvl})
-                      </div>
-                      <div className="text-[10px] md:text-xs text-[var(--gold)] flex items-center gap-1 mt-0.5 font-bold">
-                        <CoinIcon className="w-3 h-3" />
-                        {player.powerUpgradeCost} Z-Coins
+                <div className="bg-dark-card p-2 md:p-3 rounded-lg flex flex-col gap-2.5">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2 md:gap-3">
+                      <BoltIcon className={`w-6 h-6 shrink-0 ${powerUpgrading ? "animate-pulse text-[var(--gold)]" : "text-[var(--gold)]"}`} />
+                      <div>
+                        <div className="font-bold text-xs md:text-sm text-gray-200">
+                          Power (Lvl {player.powerLvl})
+                        </div>
+                        {powerUpgrading ? (
+                          <div className="text-[10px] md:text-xs text-[var(--gold)] font-medium mt-0.5">
+                            Upgrading to Lvl {player.powerLvl + 1}...
+                          </div>
+                        ) : (
+                          <div className="text-[10px] md:text-xs text-[var(--gold)] flex items-center gap-1 mt-0.5 font-bold">
+                            <CoinIcon className="w-3 h-3" />
+                            {player.powerUpgradeCost} Z-Coins
+                          </div>
+                        )}
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => handleUpgrade("power")}
+                      disabled={upgrading !== null || player.powerLvl >= 100 || powerUpgrading}
+                      className={`text-[10px] md:text-xs font-bold py-1.5 px-2 md:px-3 rounded flex items-center gap-1 ${
+                        powerUpgrading
+                          ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                          : "btn-secondary disabled:opacity-50"
+                      }`}
+                    >
+                      {upgrading === "power" ? (
+                        <Spinner size="sm" />
+                      ) : powerUpgrading ? (
+                        "Upgrading"
+                      ) : (
+                        "Upgrade"
+                      )}
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleUpgrade("power")}
-                    disabled={upgrading !== null || player.powerLvl >= 100}
-                    className="btn-secondary text-[10px] md:text-xs py-1.5 px-2 md:px-3 disabled:opacity-50"
-                  >
-                    {upgrading === "power" ? <Spinner size="sm" /> : "Upgrade"}
-                  </button>
+                  {powerUpgrading && (
+                    <div className="game-inset rounded flex justify-between items-center p-1.5 md:p-2">
+                      <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                        Time Remaining
+                      </span>
+                      <span className="text-[10px] md:text-xs font-mono font-bold text-[var(--gold)]">
+                        {formatDuration(powerRemaining)}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-dark-card p-2 md:p-3 rounded-lg flex flex-col gap-2.5">
@@ -263,11 +307,11 @@ function DashboardContent() {
               </div>
               <button
                 type="button"
-                onClick={handleClaim}
-                disabled={claiming || !canClaimZ}
+                onClick={handleClaimZ}
+                disabled={claimingZ || !canClaimZ}
                 className="btn-primary py-2 px-3 text-[10px] md:text-sm shrink-0 disabled:opacity-50"
               >
-                {claiming ? <Spinner size="sm" /> : <ClaimArrowIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />}
+                {claimingZ ? <Spinner size="sm" /> : <ClaimArrowIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />}
                 Claim
               </button>
             </div>
@@ -284,25 +328,21 @@ function DashboardContent() {
                   <span className="text-gray-300 font-medium text-xs md:text-sm">Coins</span>
                 </div>
                 <div className="flex items-center gap-1 ml-6 text-[10px] md:text-xs flex-wrap">
-                  {canClaimDaily ? (
-                    <span className="text-gray-400">Daily task reward available</span>
-                  ) : (
-                    <span className="text-gray-400">
-                      Next claim in {formatDuration(dailyTask.remainingMs)}
-                    </span>
-                  )}
-                  <span className="text-gray-500">
-                    (Pen: {formatCoins(canClaimDaily ? dailyTask.reward : 0)})
+                  <span className="font-bold text-[var(--green)]">
+                    +{formatCoins(coinsDailyRate)}/Day
+                  </span>
+                  <span className="text-gray-400 truncate">
+                    (Pen: {formatCoins(livePendingCoins)})
                   </span>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={handleDailyTask}
-                disabled={dailyTaskLoading || !canClaimDaily}
+                onClick={handleClaimCoins}
+                disabled={claimingCoins || !canClaimCoins}
                 className="btn-primary py-2 px-3 text-[10px] md:text-sm shrink-0 disabled:opacity-50"
               >
-                {dailyTaskLoading ? (
+                {claimingCoins ? (
                   <Spinner size="sm" />
                 ) : (
                   <ClaimArrowIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />

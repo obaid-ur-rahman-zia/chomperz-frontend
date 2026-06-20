@@ -112,9 +112,21 @@ function ProfileContent() {
           <span>{player.speedLvl}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-[var(--muted)]">Pending</span>
+          <span className="text-[var(--muted)]">Pending Z</span>
           <span className="text-[var(--gold)]">
             {formatCoins(economy.pendingEarnings)} Z
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-[var(--muted)]">Pending Coins</span>
+          <span className="text-[var(--blue)]">
+            {formatCoins(economy.pendingCoins ?? 0)}
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-[var(--muted)]">Coins / Day</span>
+          <span className="text-[var(--green)]">
+            +{formatCoins(economy.coinsDailyRate ?? 5)}
           </span>
         </div>
       </div>

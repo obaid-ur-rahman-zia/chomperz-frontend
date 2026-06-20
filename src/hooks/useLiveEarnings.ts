@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  calculateLivePending,
-  getDailyTaskStatus,
-  MS_PER_DAY,
-} from "@/lib/economy";
+import { calculateLivePending, BASE_COINS_PER_DAY, MS_PER_DAY } from "@/lib/economy";
 
 export function useLivePendingZCoins(dailyRate: number, lastClaimAt: string | null) {
   const [pending, setPending] = useState(() =>
@@ -22,17 +18,20 @@ export function useLivePendingZCoins(dailyRate: number, lastClaimAt: string | nu
   return pending;
 }
 
-export function useDailyTaskStatus(lastDailyTaskAt: string | null) {
-  const [status, setStatus] = useState(() => getDailyTaskStatus(lastDailyTaskAt));
+export function useLivePendingCoins(lastCoinsClaimAt: string | null) {
+  const [pending, setPending] = useState(() =>
+    calculateLivePending(BASE_COINS_PER_DAY, lastCoinsClaimAt)
+  );
 
   useEffect(() => {
-    const tick = () => setStatus(getDailyTaskStatus(lastDailyTaskAt));
+    const tick = () =>
+      setPending(calculateLivePending(BASE_COINS_PER_DAY, lastCoinsClaimAt));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [lastDailyTaskAt]);
+  }, [lastCoinsClaimAt]);
 
-  return status;
+  return pending;
 }
 
-export { MS_PER_DAY };
+export { MS_PER_DAY, BASE_COINS_PER_DAY };

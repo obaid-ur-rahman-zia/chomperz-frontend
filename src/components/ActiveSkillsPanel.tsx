@@ -5,7 +5,6 @@ import {
   BoltIcon,
   EditIcon,
   ShopIcon,
-  SpeedIcon,
   SwordIcon,
 } from "@/components/Icons";
 import {
@@ -107,25 +106,11 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
     }
   }
 
-  async function handleUpgrade() {
-    setBusy("upgrade");
-    try {
-      await apiFetch("/api/player/skills/upgrade", {
-        method: "POST",
-        body: JSON.stringify({ skill: skills.selectedSkill }),
-      });
-      toast.success("Skill upgraded!");
-      await onRefresh();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Upgrade failed");
-    } finally {
-      setBusy(null);
-    }
-  }
-
   const selected = skills.selected;
   const isRunning = action.state === "running";
   const isCompleted = action.state === "completed";
+  const needsInput = (selected.inputQuantity ?? 0) > 0;
+  const hasInput = !needsInput || (selected.inputQty ?? 0) >= (selected.inputQuantity ?? 0);
 
   return (
     <div className="card flex flex-col gap-3 md:gap-4">
@@ -155,6 +140,7 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
               >
                 {skill.label}
               </span>
+              <span className="text-[9px] text-gray-500 font-bold">Lvl {skill.level}</span>
             </button>
           );
         })}
@@ -164,17 +150,9 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
         <div className="font-bold text-gray-300 text-xs md:text-sm">
           Lvl: <span className="text-[var(--green)] text-sm md:text-base">{selected.level}</span>
         </div>
-        <button
-          type="button"
-          onClick={handleUpgrade}
-          disabled={busy !== null}
-          className="btn-secondary text-[10px] md:text-sm py-1 px-2 md:py-1.5 md:px-3 h-fit disabled:opacity-50"
-        >
-          Upgrade
-          <span className="bg-black/30 px-1 py-0.5 rounded text-[9px] md:text-xs font-mono ml-1">
-            {selected.upgradeCost}
-          </span>
-        </button>
+        <div className="text-[10px] md:text-xs text-gray-400 font-bold">
+          XP {selected.xp} / {selected.xpToNext}
+        </div>
       </div>
 
       <div className="bg-dark-card p-2.5 md:p-3 rounded-lg border border-gray-800 flex flex-col gap-1.5 md:gap-2">
@@ -193,6 +171,11 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
             <span className="text-[10px] md:text-xs font-bold text-red-500">{selected.failPct}%</span>
           </div>
         </div>
+        {needsInput && (
+          <p className="text-[10px] text-gray-400 font-bold">
+            Requires {selected.inputQuantity} {selected.inputItemId} (have {selected.inputQty ?? 0})
+          </p>
+        )}
       </div>
 
       <div className="game-inset p-3 md:p-4 rounded-lg flex flex-col gap-3 md:gap-4">
@@ -209,7 +192,7 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
           <button
             type="button"
             onClick={handleStart}
-            disabled={busy !== null || isRunning}
+            disabled={busy !== null || isRunning || !hasInput}
             className="w-full btn-primary py-2.5 md:py-3 text-xs md:text-sm uppercase tracking-wide disabled:opacity-50 shadow-[0_0_10px_rgba(34,197,94,0.2)]"
           >
             {busy === "start" ? <Spinner size="sm" /> : "Start Action"}

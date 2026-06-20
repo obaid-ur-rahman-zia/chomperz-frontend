@@ -27,6 +27,7 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true);
   const [bidAmount, setBidAmount] = useState("");
   const [bidding, setBidding] = useState(false);
+  const [purchasing, setPurchasing] = useState(false);
 
   const zCoins = player?.zCoins ?? null;
 
@@ -48,14 +49,39 @@ export default function MapPage() {
     if (selectedId === null) return;
     apiFetch<{ plot: PlotDetail }>(`/api/plots/${selectedId}`).then((data) => {
       setDetail(data.plot);
-      setBidAmount(String(data.plot.minBid ?? 1));
+      setBidAmount(String(data.plot.minBid ?? 7));
     });
   }, [selectedId]);
+
+  async function refreshDetail() {
+    if (selectedId === null) return;
+    const refreshed = await apiFetch<{ plot: PlotDetail }>(`/api/plots/${selectedId}`);
+    setDetail(refreshed.plot);
+    setBidAmount(String(refreshed.plot.minBid ?? 7));
+  }
+
+  async function handlePurchase() {
+    if (selectedId === null) return;
+    setPurchasing(true);
+    try {
+      await apiFetch(`/api/plots/${selectedId}/purchase`, { method: "POST" });
+      await refresh({ silent: true });
+      toast.success("Land purchased for 100 Z-Coins!");
+      await refreshDetail();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Purchase failed");
+    } finally {
+      setPurchasing(false);
+    }
+  }
 
   async function handleOutbid() {
     if (selectedId === null) return;
     const amount = parseInt(bidAmount, 10);
-    if (!amount) return;
+    if (!Number.isInteger(amount) || amount < 7) {
+      toast.error("Enter a whole-number 7-day bid (min 7 Z-Coins)");
+      return;
+    }
     setBidding(true);
     try {
       await apiFetch<{ zCoins: number }>(`/api/plots/${selectedId}/bid`, {
@@ -63,12 +89,8 @@ export default function MapPage() {
         body: JSON.stringify({ amount }),
       });
       await refresh({ silent: true });
-      toast.success(`Bid placed: ${amount} Z-Coins / day`);
-      const refreshed = await apiFetch<{ plot: PlotDetail }>(
-        `/api/plots/${selectedId}`
-      );
-      setDetail(refreshed.plot);
-      setBidAmount(String(refreshed.plot.minBid ?? amount + 1));
+      toast.success(`7-day lease bid placed: ${amount} Z-Coins`);
+      await refreshDetail();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Bid failed");
     } finally {
@@ -79,6 +101,10 @@ export default function MapPage() {
   if (loading) {
     return <MapSkeleton />;
   }
+
+  const canPurchase =
+    detail?.purchasePrice != null && detail.status === "unclaimed";
+  const canBid = detail?.status === "owned" && detail.landlordHandle;
 
   return (
     <>
@@ -115,7 +141,7 @@ export default function MapPage() {
             <CrownIcon className="text-[var(--gold)]" />
             <span>
               <span className="text-[var(--gold)]">Gold borders</span> indicate
-              Legendary Plots. High rent limits, high taxes.
+              Legendary Plots. Frontier plots 11–100 cost 100 Z-Coins to purchase.
             </span>
           </p>
         </div>
@@ -128,6 +154,21 @@ export default function MapPage() {
                 PLOT #{detail.displayId ?? String(detail.plotId + 1).padStart(2, "0")}
               </h2>
               <p className="text-[var(--muted)] font-bold mb-6">{detail.name}</p>
+
+              {canPurchase && (
+                <div className="mb-4 p-4 bg-black/25 rounded-2xl border border-[var(--green)]/30">
+                  <p className="text-sm font-bold text-gray-300 mb-3">
+                    Unoccupied frontier land — purchase for {detail.purchasePrice} Z-Coins
+                  </p>
+                  <button
+                    onClick={handlePurchase}
+                    disabled={purchasing}
+                    className="btn-primary w-full disabled:opacity-50"
+                  >
+                    {purchasing ? <Spinner size="sm" /> : "Purchase Land"}
+                  </button>
+                </div>
+              )}
 
               {detail.landlordHandle && (
                 <div className="bg-black/25 rounded-2xl p-4 mb-4 border border-[var(--gold)]/20">
@@ -145,58 +186,78 @@ export default function MapPage() {
                     <div>
                       <p className="font-extrabold">{detail.landlordHandle}</p>
                       <p className="text-xs text-[var(--muted)] font-bold">
-                        Takes {detail.landlordTaxPct ?? 10}% of all rent collected
+                        Receives {detail.landlordTaxPct ?? 10}% of each renter&apos;s 7-day bid per day
                       </p>
                     </div>
                   </div>
                 </div>
               )}
 
-              <div className="mb-4">
-                <p className="stat-label mb-3 flex items-center gap-1.5">
-                  <SwordIcon />
-                  Active Renters (Max 3)
-                </p>
-                {detail.renters.length === 0 ? (
-                  <p className="text-sm text-[var(--muted)] font-bold">No renters yet</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {detail.renters.map((r, i) => (
-                      <li
-                        key={r.walletAddress}
-                        className="flex justify-between items-center bg-black/15 rounded-xl px-3 py-2.5 text-sm font-bold"
-                      >
-                        <span>
-                          {i + 1}. {r.twitterHandle || `${r.walletAddress.slice(0, 8)}...`}
-                        </span>
-                        <span className="text-[var(--gold)] flex items-center gap-1">
-                          <CoinIcon className="w-3.5 h-3.5" />
-                          {r.dailyBid} / day
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              {canBid && (
+                <>
+                  <div className="mb-4">
+                    <p className="stat-label mb-3 flex items-center gap-1.5">
+                      <SwordIcon />
+                      Active Renters (Max 3)
+                    </p>
+                    {detail.renters.length === 0 ? (
+                      <p className="text-sm text-[var(--muted)] font-bold">No renters yet</p>
+                    ) : (
+                      <ul className="space-y-2">
+                        {detail.renters.map((r, i) => (
+                          <li
+                            key={r.walletAddress}
+                            className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-black/15 rounded-xl px-3 py-2.5 text-sm font-bold gap-1"
+                          >
+                            <span>
+                              {i + 1}. {r.twitterHandle || `${r.walletAddress.slice(0, 8)}...`}
+                            </span>
+                            <span className="text-[var(--gold)] flex items-center gap-1 flex-wrap">
+                              <CoinIcon className="w-3.5 h-3.5" />
+                              {r.sevenDayBid ?? r.escrowBalance} Z / 7 days
+                              {r.leaseExpiresAt && (
+                                <span className="text-[10px] text-gray-400">
+                                  · until {new Date(r.leaseExpiresAt).toLocaleDateString()}
+                                </span>
+                              )}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 mt-6">
-                <input
-                  type="number"
-                  min={detail.minBid ?? 1}
-                  value={bidAmount}
-                  onChange={(e) => setBidAmount(e.target.value)}
-                  placeholder={`Min. ${detail.minBid ?? 1}`}
-                  className="flex-1 bg-black/30 border-2 border-[#3a453d] rounded-xl px-4 py-3 font-bold text-white outline-none focus:border-[var(--gold)] min-h-[48px]"
-                />
-                <button
-                  onClick={handleOutbid}
-                  disabled={bidding}
-                  className="btn-danger px-6 py-3 shrink-0 disabled:opacity-50 min-h-[48px]"
-                >
-                  <SwordIcon className="w-4 h-4" />
-                  {bidding ? <Spinner size="sm" /> : "OUTBID"}
-                </button>
-              </div>
+                  <div className="flex flex-col gap-2 mt-6">
+                    <label className="text-xs text-gray-400 font-bold">
+                      7-day bid (whole Z-Coins, min {detail.minBid ?? 7})
+                    </label>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="number"
+                        min={detail.minBid ?? 7}
+                        step={1}
+                        value={bidAmount}
+                        onChange={(e) => setBidAmount(e.target.value)}
+                        placeholder={`Min. ${detail.minBid ?? 7}`}
+                        className="flex-1 bg-black/30 border-2 border-[#3a453d] rounded-xl px-4 py-3 font-bold text-white outline-none focus:border-[var(--gold)] min-h-[48px]"
+                      />
+                      <button
+                        onClick={handleOutbid}
+                        disabled={bidding}
+                        className="btn-danger px-6 py-3 shrink-0 disabled:opacity-50 min-h-[48px]"
+                      >
+                        <SwordIcon className="w-4 h-4" />
+                        {bidding ? <Spinner size="sm" /> : "BID / EXTEND"}
+                      </button>
+                    </div>
+                    {zCoins !== null && (
+                      <p className="text-[10px] text-gray-500 font-bold">
+                        Your balance: {formatCoins(zCoins)} Z-Coins
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
             </>
           ) : selectedId !== null ? (
             <PlotDetailSkeleton />

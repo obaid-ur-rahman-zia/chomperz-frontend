@@ -17,6 +17,8 @@ export interface PlayerEconomy {
   powerMultiplier: number;
   dailyRate: number;
   pendingEarnings: number;
+  coinsDailyRate: number;
+  pendingCoins: number;
 }
 
 export interface OwnedNft {
@@ -39,11 +41,12 @@ export interface ActiveSkillEntry {
   level: number;
   xp: number;
   xpToNext: number;
-  upgradeCost: number;
   rewardItemId: string;
   rewardItemLabel: string;
   successPct: number;
   failPct: number;
+  inputItemId?: string | null;
+  inputQuantity?: number;
 }
 
 export interface ActiveSkillsState {
@@ -51,6 +54,7 @@ export interface ActiveSkillsState {
   skills: ActiveSkillEntry[];
   selected: ActiveSkillEntry & {
     inventoryQty: number;
+    inputQty?: number;
   };
   action: ActionStatus;
 }
@@ -84,13 +88,15 @@ export interface PlayerData {
   lastLoginAt: string;
   lastClaimedAt: string;
   lastClaimAt: string;
-  lastDailyTaskAt: string | null;
-  dailyTaskReward: number;
+  lastCoinsClaimAt: string;
   powerLvl: number;
   speedLvl: number;
   speedUpgradingUntil?: string | null;
+  powerUpgradingUntil?: string | null;
   speedUpgradeRemainingMs?: number;
+  powerUpgradeRemainingMs?: number;
   isSpeedUpgrading?: boolean;
+  isPowerUpgrading?: boolean;
   powerUpgradeCost: number;
   speedUpgradeCost: number;
   cachedNftCount: number;
@@ -104,8 +110,10 @@ export interface PlayerData {
 export interface PlotRenter {
   walletAddress: string;
   twitterHandle?: string;
+  sevenDayBid?: number;
   dailyBid: number;
   escrowBalance: number;
+  leaseExpiresAt?: string;
 }
 
 export interface PlotSummary {
@@ -124,13 +132,24 @@ export interface PlotDetail extends PlotSummary {
   landType?: string;
   displayId?: string;
   minBid?: number;
+  purchasePrice?: number | null;
   landlordTaxPct?: number;
+}
+
+export interface FurnitureCost {
+  coins?: number;
+  zCoins?: number;
+  wood?: number;
+  plank?: number;
+  ore?: number;
+  ingot?: number;
 }
 
 export interface FurnitureItem {
   id: string;
   name: string;
-  price: number;
+  tier: "wooden" | "iron" | "fancy";
+  cost: FurnitureCost;
   w: number;
   h: number;
   color: string;

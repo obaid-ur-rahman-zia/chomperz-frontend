@@ -137,6 +137,9 @@ export default function MapPage() {
     onPlotsChange: setPlots,
     onPlotPatch: handlePlotPatch,
     onEvent: handleSocketEvent,
+    onPoll: () => {
+      if (selectedId !== null) void refreshDetail();
+    },
   });
 
   async function handlePurchase() {
@@ -298,7 +301,7 @@ export default function MapPage() {
               {showLoginWarning && (
                 <div className="mb-4 p-4 bg-black/25 rounded-2xl border border-[var(--gold)]/30">
                   <p className="text-sm font-bold text-gray-300 mb-1">
-                    FORMULAS.md: log in at least once every 7 days to keep this plot
+                    Log in at least once every 7 days to keep this plot
                   </p>
                   {loginCountdownMs !== null && (
                     <p className="text-xs text-[var(--gold)] font-bold">

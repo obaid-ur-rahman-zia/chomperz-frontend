@@ -2,12 +2,14 @@
 
 import { useEffect, useRef } from "react";
 import { io, type Socket } from "socket.io-client";
-import type { PlotSummary } from "@/lib/api";
+import { apiFetch, type PlotSummary } from "@/lib/api";
 
 const SOCKET_URL =
   process.env.NEXT_PUBLIC_SOCKET_URL?.replace(/\/$/, "") ||
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
   "";
+
+const POLL_INTERVAL_MS = 12_000;
 
 export interface PlotPatchPayload {
   plotId: number;
@@ -42,27 +44,100 @@ function mergePlotPatch(plots: PlotSummary[], patch: PlotPatchPayload): PlotSumm
   return next;
 }
 
+function isSocketExplicitlyDisabled(): boolean {
+  const flag = process.env.NEXT_PUBLIC_SOCKET_ENABLED?.trim().toLowerCase();
+  return flag === "false" || flag === "0" || flag === "no";
+}
+
+/** Vercel serverless cannot host persistent Socket.IO — use HTTP polling instead. */
+function isServerlessSocketHost(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host.endsWith(".vercel.app");
+  } catch {
+    return url.includes(".vercel.app");
+  }
+}
+
+async function fetchPlots(): Promise<PlotSummary[]> {
+  const { plots } = await apiFetch<{ plots: PlotSummary[] }>("/api/plots");
+  return plots;
+}
+
 export function useTerritorySocket(options: {
   enabled?: boolean;
   onPlotPatch?: (patch: PlotPatchPayload) => void;
   onPlotsChange?: (updater: (prev: PlotSummary[]) => PlotSummary[]) => void;
   onEvent?: (event: string, payload: Record<string, unknown>) => void;
+  /** Called after each HTTP poll (e.g. refresh selected plot detail). */
+  onPoll?: () => void;
 }) {
-  const { enabled = true, onPlotPatch, onPlotsChange, onEvent } = options;
-  const socketRef = useRef<Socket | null>(null);
+  const { enabled = true, onPlotPatch, onPlotsChange, onEvent, onPoll } = options;
+
+  const onPlotPatchRef = useRef(onPlotPatch);
+  const onPlotsChangeRef = useRef(onPlotsChange);
+  const onEventRef = useRef(onEvent);
+  const onPollRef = useRef(onPoll);
+
+  onPlotPatchRef.current = onPlotPatch;
+  onPlotsChangeRef.current = onPlotsChange;
+  onEventRef.current = onEvent;
+  onPollRef.current = onPoll;
 
   useEffect(() => {
-    if (!enabled || !SOCKET_URL || typeof window === "undefined") return;
+    if (!enabled || typeof window === "undefined") return;
 
-    const socket = io(SOCKET_URL, {
+    let pollId: ReturnType<typeof setInterval> | null = null;
+    let socket: Socket | null = null;
+    let pollingActive = false;
+
+    const startPolling = () => {
+      if (pollingActive) return;
+      pollingActive = true;
+
+      const runPoll = async () => {
+        try {
+          const plots = await fetchPlots();
+          onPlotsChangeRef.current?.(() => plots);
+          onPollRef.current?.();
+        } catch {
+          /* ignore transient poll errors */
+        }
+      };
+
+      void runPoll();
+      pollId = setInterval(runPoll, POLL_INTERVAL_MS);
+    };
+
+    const stopPolling = () => {
+      pollingActive = false;
+      if (pollId) {
+        clearInterval(pollId);
+        pollId = null;
+      }
+    };
+
+    const useSocket =
+      Boolean(SOCKET_URL) &&
+      !isSocketExplicitlyDisabled() &&
+      !isServerlessSocketHost(SOCKET_URL);
+
+    if (!useSocket) {
+      startPolling();
+      return stopPolling;
+    }
+
+    socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
       withCredentials: true,
+      reconnectionAttempts: 2,
+      reconnectionDelay: 2000,
+      timeout: 10_000,
     });
-    socketRef.current = socket;
 
     socket.on("plots:patch", (patch: PlotPatchPayload) => {
-      onPlotPatch?.(patch);
-      onPlotsChange?.((prev) => mergePlotPatch(prev, patch));
+      onPlotPatchRef.current?.(patch);
+      onPlotsChangeRef.current?.((prev) => mergePlotPatch(prev, patch));
     });
 
     const events = [
@@ -75,17 +150,23 @@ export function useTerritorySocket(options: {
 
     for (const event of events) {
       socket.on(event, (payload: Record<string, unknown>) => {
-        onEvent?.(event, payload);
+        onEventRef.current?.(event, payload);
       });
     }
 
-    return () => {
-      socket.disconnect();
-      socketRef.current = null;
-    };
-  }, [enabled, onEvent, onPlotPatch, onPlotsChange]);
+    socket.io.on("reconnect_failed", () => {
+      socket?.disconnect();
+      socket = null;
+      startPolling();
+    });
 
-  return { connected: Boolean(socketRef.current?.connected) };
+    return () => {
+      socket?.disconnect();
+      stopPolling();
+    };
+  }, [enabled]);
+
+  return {};
 }
 
 export function applyPlotPatch(plots: PlotSummary[], patch: PlotPatchPayload): PlotSummary[] {

@@ -79,7 +79,7 @@ function LoginContent() {
   }
 
   return (
-    <main className="login-page min-h-screen flex items-center justify-center p-4 sm:p-6">
+    <main className="login-page min-h-[100dvh] flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-md">
         <div className="relative mx-auto w-full max-w-[240px] sm:max-w-[280px] mb-6">
           <div className="absolute -inset-3 rounded-3xl bg-[var(--green)]/20 blur-xl" aria-hidden />
@@ -168,7 +168,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <main className="login-page min-h-screen">
+        <main className="login-page min-h-[100dvh]">
           <LoadingScreen />
         </main>
       }

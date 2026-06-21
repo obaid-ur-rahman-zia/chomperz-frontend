@@ -276,7 +276,7 @@ export default function MapPage() {
                     Crown Land — not for sale
                   </p>
                   <p className="text-xs text-[var(--muted)] font-bold leading-relaxed">
-                    Own Chomperz NFT #{legendaryNftId} in your linked wallet, then tap{" "}
+                    Own {player?.nftCollectionName ?? "Chomperz"} NFT #{legendaryNftId} in your linked wallet, then tap{" "}
                     <span className="text-[var(--gold)]">NFTs</span> in the header to sync. This plot
                     cannot be purchased with Z-Coins.
                   </p>

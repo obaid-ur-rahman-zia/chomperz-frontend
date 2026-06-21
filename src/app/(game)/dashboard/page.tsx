@@ -137,6 +137,16 @@ function DashboardContent() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        {player.isDevNftCollection && (
+          <div className="lg:col-span-2 rounded-xl border border-[var(--gold)]/40 bg-[var(--gold)]/10 px-4 py-3 text-xs md:text-sm font-bold text-[var(--gold)]">
+            Testing with demo collection: {player.nftCollectionName}
+            {player.nftContractAddress ? (
+              <span className="block text-[10px] text-[var(--muted)] font-mono mt-1 truncate">
+                {player.nftContractAddress}
+              </span>
+            ) : null}
+          </div>
+        )}
         <div className="card h-fit">
           <div className="border-2 md:border-4 border-[var(--green)] rounded-xl overflow-hidden bg-[#c9d0b6] aspect-square flex items-center justify-center mb-4 w-32 md:w-full max-w-sm mx-auto shadow-inner relative">
             <Image

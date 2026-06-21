@@ -115,6 +115,9 @@ export interface PlayerData {
   cachedNftCount: number;
   cachedTokenIds?: number[];
   nfts: OwnedNft[];
+  nftCollectionName: string;
+  nftContractAddress: string | null;
+  isDevNftCollection?: boolean;
   chomperLabel: string;
   activeSkills?: ActiveSkillsState;
   economy: PlayerEconomy;

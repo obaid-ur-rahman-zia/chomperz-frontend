@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
+import { LeaderboardRowsSkeleton, LeaderboardSkeleton } from "@/components/Loading";
 import { usePlayer } from "@/hooks/usePlayer";
 import { apiFetch, formatCoins, type LeaderboardEntry } from "@/lib/api";
 
@@ -39,7 +40,7 @@ function LeaderboardContent() {
   }, [board]);
 
   if (playerLoading || !player) {
-    return <p className="text-sm text-[var(--muted)]">Loading...</p>;
+    return <LeaderboardSkeleton />;
   }
 
   return (
@@ -62,7 +63,7 @@ function LeaderboardContent() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-[var(--muted)] font-bold">Loading rankings...</p>
+        <LeaderboardRowsSkeleton />
       ) : rows.length === 0 ? (
         <p className="text-sm text-[var(--muted)] font-bold">No rankings yet.</p>
       ) : (

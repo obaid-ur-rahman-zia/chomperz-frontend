@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { linkWalletWithProvider, getMetaMaskProvider, formatWalletLinkError } from "@/lib/walletLink";
@@ -15,9 +15,22 @@ import { Spinner } from "@/components/Loading";
 
 interface WalletConnectProps {
   walletAddress: string | null;
+  nftCount?: number;
   onLinked: () => void;
   compact?: boolean;
   variant?: "default" | "header";
+}
+
+function nftHoverTitle(count: number): string {
+  if (count === 0) return "0 NFTs synced · Tap to refresh from wallet";
+  if (count === 1) return "1 NFT synced · Tap to refresh";
+  return `${count} NFTs synced · Tap to refresh`;
+}
+
+function nftSyncToast(count: number): string {
+  if (count === 0) return "Sync complete — no NFTs found in this collection";
+  if (count === 1) return "1 NFT synced from wallet!";
+  return `${count} NFTs synced from wallet!`;
 }
 
 function walletErrorMessage(e: unknown): string {
@@ -30,15 +43,21 @@ function walletErrorMessage(e: unknown): string {
 
 export function WalletConnect({
   walletAddress,
+  nftCount = 0,
   onLinked,
   compact,
   variant = "default",
 }: WalletConnectProps) {
   const [loading, setLoading] = useState<"metamask" | "wc" | "disconnect" | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [displayCount, setDisplayCount] = useState(nftCount);
   const wcEnabled = Boolean(getWalletConnectProjectId());
   const metamaskEnabled = isMetaMaskEnabled();
   const isHeader = variant === "header";
+
+  useEffect(() => {
+    if (!syncing) setDisplayCount(nftCount);
+  }, [nftCount, syncing]);
 
   async function connectInjected() {
     if (loading !== null) return;
@@ -77,8 +96,12 @@ export function WalletConnect({
   async function refreshNfts() {
     setSyncing(true);
     try {
-      await apiFetch("/api/player/sync-nfts", { method: "POST" });
-      toast.success("NFTs refreshed from blockchain!");
+      const data = await apiFetch<{ nftCount: number }>("/api/player/sync-nfts", {
+        method: "POST",
+      });
+      const count = data.nftCount ?? 0;
+      setDisplayCount(count);
+      toast.success(nftSyncToast(count));
       onLinked();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "NFT sync failed");
@@ -109,26 +132,39 @@ export function WalletConnect({
     if (isHeader) {
       return (
         <div className="flex items-center gap-1 shrink-0">
-          <span className="game-pill px-2 py-1 rounded-full text-[10px] lg:text-xs font-bold text-[var(--green)] tabular-nums hidden sm:inline">
+          <span className="game-pill px-2 py-1 rounded-full text-[10px] lg:text-xs font-bold text-[var(--green)] tabular-nums hidden md:inline">
             {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
           </span>
           <button
             type="button"
             onClick={refreshNfts}
             disabled={loading !== null || syncing}
-            title="Refresh NFTs"
-            className="btn-secondary px-2 py-1 text-[10px] lg:text-xs shrink-0 disabled:opacity-50 min-h-0"
+            title={nftHoverTitle(displayCount)}
+            aria-label={syncing ? "Syncing NFTs" : nftHoverTitle(displayCount)}
+            className="btn-header btn-header-secondary disabled:opacity-50"
           >
-            {syncing ? <Spinner size="sm" /> : "NFTs"}
+            {syncing ? (
+              <Spinner size="sm" />
+            ) : (
+              <>
+                <span>NFTs</span>
+                <span className="btn-header-badge">{displayCount}</span>
+              </>
+            )}
           </button>
           <button
             type="button"
             onClick={disconnectWallet}
             disabled={loading !== null || syncing}
             title="Disconnect wallet"
-            className="btn-danger px-2 py-1 text-[10px] lg:text-xs shrink-0 disabled:opacity-50 min-h-0"
+            aria-label="Disconnect wallet"
+            className="btn-header btn-header-danger btn-header-icon disabled:opacity-50"
           >
-            {loading === "disconnect" ? <Spinner size="sm" /> : <UnlinkIcon className="w-3.5 h-3.5" />}
+            {loading === "disconnect" ? (
+              <Spinner size="sm" />
+            ) : (
+              <UnlinkIcon className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+            )}
           </button>
         </div>
       );
@@ -155,6 +191,8 @@ export function WalletConnect({
         <button
           onClick={refreshNfts}
           disabled={loading !== null || syncing}
+          title={nftHoverTitle(displayCount)}
+          aria-label={syncing ? "Syncing NFTs" : nftHoverTitle(displayCount)}
           className="btn-secondary w-full text-sm disabled:opacity-50"
         >
           {syncing ? (
@@ -163,7 +201,12 @@ export function WalletConnect({
               Syncing NFTs...
             </>
           ) : (
-            "Refresh NFTs"
+            <>
+              Refresh NFTs
+              <span className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] px-1.5 py-0.5 rounded-full bg-black/25 text-xs font-black tabular-nums">
+                {displayCount}
+              </span>
+            </>
           )}
         </button>
       </div>

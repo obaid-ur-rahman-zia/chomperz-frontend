@@ -10,6 +10,7 @@ interface UserMenuProps {
   twitterHandle: string;
   profilePicUrl?: string | null;
   compact?: boolean;
+  avatarOnly?: boolean;
   className?: string;
 }
 
@@ -21,6 +22,7 @@ export function UserMenu({
   twitterHandle,
   profilePicUrl,
   compact = false,
+  avatarOnly = false,
   className = "",
 }: UserMenuProps) {
   const [open, setOpen] = useState(false);
@@ -63,29 +65,42 @@ export function UserMenu({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className={`game-pill flex items-center gap-1.5 rounded-full w-full min-w-0 transition-[filter] hover:brightness-110 ${
-          compact ? "pl-0.5 pr-1.5 py-0.5 min-h-[32px] lg:min-h-[40px] lg:pl-1 lg:pr-2.5 lg:py-1" : "pl-1 pr-2.5 py-1 min-h-[40px]"
-        }`}
+        aria-label={avatarOnly ? `${displayName} menu` : undefined}
+        className={
+          avatarOnly
+            ? "relative shrink-0 w-8 h-8 rounded-full overflow-hidden border-2 border-[var(--green)] transition-[filter] hover:brightness-110"
+            : `game-pill flex items-center gap-1.5 rounded-full w-full min-w-0 transition-[filter] hover:brightness-110 ${
+                compact
+                  ? "pl-0.5 pr-1.5 py-0.5 min-h-[32px] lg:min-h-[40px] lg:pl-1 lg:pr-2.5 lg:py-1"
+                  : "pl-1 pr-2.5 py-1 min-h-[40px]"
+              }`
+        }
       >
-        <div
-          className={`relative rounded-full overflow-hidden border-2 border-[var(--green)] shrink-0 ${
-            compact ? "w-7 h-7 lg:w-8 lg:h-8" : "w-8 h-8"
-          }`}
-        >
+        {avatarOnly ? (
           <UserAvatar src={avatar} alt={displayName} />
-        </div>
-        <span
-          className={`font-extrabold truncate min-w-0 flex-1 text-left ${
-            compact ? "text-[11px] lg:text-sm max-w-full" : "text-sm max-w-[120px]"
-          }`}
-        >
-          {displayName}
-        </span>
-        <ChevronDownIcon
-          className={`text-[var(--muted)] shrink-0 transition-transform ${open ? "rotate-180" : ""} ${
-            compact ? "w-3.5 h-3.5 lg:w-4 lg:h-4" : "w-4 h-4"
-          }`}
-        />
+        ) : (
+          <>
+            <div
+              className={`relative rounded-full overflow-hidden border-2 border-[var(--green)] shrink-0 ${
+                compact ? "w-7 h-7 lg:w-8 lg:h-8" : "w-8 h-8"
+              }`}
+            >
+              <UserAvatar src={avatar} alt={displayName} />
+            </div>
+            <span
+              className={`font-extrabold truncate min-w-0 flex-1 text-left ${
+                compact ? "text-[11px] lg:text-sm max-w-full" : "text-sm max-w-[120px]"
+              }`}
+            >
+              {displayName}
+            </span>
+            <ChevronDownIcon
+              className={`text-[var(--muted)] shrink-0 transition-transform ${open ? "rotate-180" : ""} ${
+                compact ? "w-3.5 h-3.5 lg:w-4 lg:h-4" : "w-4 h-4"
+              }`}
+            />
+          </>
+        )}
       </button>
 
       {open && (

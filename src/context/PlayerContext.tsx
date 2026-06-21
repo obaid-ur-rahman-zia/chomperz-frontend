@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch, type PlayerData } from "@/lib/api";
+import { apiFetch, clearToken, type PlayerData } from "@/lib/api";
 
 interface RefreshOptions {
   silent?: boolean;
@@ -51,7 +51,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         setPlayer(data);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load player");
-        router.push("/login");
+        clearToken();
+        window.location.replace("/login");
       } finally {
         setLoading(false);
         setRefreshing(false);

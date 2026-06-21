@@ -181,6 +181,16 @@ export function InventorySkeleton() {
   );
 }
 
+export function LeaderboardRowsSkeleton() {
+  return (
+    <div className="card p-4 space-y-3" aria-busy="true">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <Skeleton key={i} className="h-10 w-full rounded-lg" />
+      ))}
+    </div>
+  );
+}
+
 export function LeaderboardSkeleton() {
   return (
     <>

@@ -7,6 +7,10 @@ export interface OwnedNft {
   rarity: RarityTier;
 }
 
+export function formatRarity(tier: RarityTier): string {
+  return tier.charAt(0).toUpperCase() + tier.slice(1);
+}
+
 export function getChomperLabelFromPlayer(player: {
   chomperLabel?: string;
   nfts?: OwnedNft[];
@@ -14,6 +18,5 @@ export function getChomperLabelFromPlayer(player: {
   if (player.chomperLabel) return player.chomperLabel;
   if (!player.nfts?.length) return "Chomper Recruit";
   const n = player.nfts[0];
-  const tier = n.rarity.charAt(0).toUpperCase() + n.rarity.slice(1);
-  return `Chomper #${n.tokenId} (${tier})`;
+  return `Chomper #${n.tokenId} (${formatRarity(n.rarity)})`;
 }

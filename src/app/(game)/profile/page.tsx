@@ -1,6 +1,7 @@
 "use client";
 
 import { ProfileSkeleton } from "@/components/Loading";
+import { NftGallery } from "@/components/NftGallery";
 import { UserAvatar } from "@/components/UserAvatar";
 import { usePlayer } from "@/hooks/usePlayer";
 import {
@@ -87,6 +88,12 @@ function ProfileContent() {
           <p className="font-black text-xl">{player.multiplier.toFixed(2)}x</p>
         </div>
       </div>
+
+      <NftGallery
+        nfts={player.nfts ?? []}
+        collectionName={player.nftCollectionName}
+        walletLinked={Boolean(player.walletAddress)}
+      />
 
       <div className="card mb-4 space-y-2 text-sm font-bold">
         <div className="flex justify-between">

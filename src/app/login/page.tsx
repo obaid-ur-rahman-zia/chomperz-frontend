@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { apiFetch, hasSession, setToken } from "@/lib/api";
+import { apiFetch, clearToken, hasSession, setToken } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { CoinIcon, MapIcon, TrendIcon, XIcon } from "@/components/Icons";
 import { LoadingScreen, Spinner } from "@/components/Loading";
@@ -15,10 +15,17 @@ function LoginContent() {
   const [imgSrc, setImgSrc] = useState("/images/chomper.jpg");
 
   useEffect(() => {
-    if (hasSession()) {
-      window.location.replace("/dashboard");
-      return;
+    async function resumeExistingSession() {
+      if (!hasSession()) return;
+      try {
+        await apiFetch("/api/player/me");
+        window.location.replace("/dashboard");
+      } catch {
+        clearToken();
+      }
     }
+
+    void resumeExistingSession();
 
     const err = searchParams.get("error");
     const detail = searchParams.get("error_detail");

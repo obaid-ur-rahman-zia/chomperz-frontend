@@ -51,29 +51,33 @@ export function GameNav() {
         })}
       </nav>
 
-      {/* Mobile: fixed bottom nav */}
+      {/* Mobile: iOS-style floating glass bottom nav */}
       <nav
         aria-label="Mobile game navigation"
-        className="game-bottom-nav fixed bottom-0 inset-x-0 z-50 pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className="game-bottom-nav fixed bottom-0 inset-x-0 z-50 px-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] lg:hidden pointer-events-none"
       >
-        <div className="flex justify-around items-stretch max-w-lg mx-auto">
-          {NAV.map(({ href, shortLabel, icon: Icon }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 text-[10px] font-extrabold no-underline transition-all min-w-0 px-0.5 ${
-                  active
-                    ? "game-bottom-nav-item-active text-[var(--green)]"
-                    : "text-[var(--muted)]"
-                }`}
-              >
-                <Icon className="w-5 h-5 shrink-0" />
-                <span className="truncate w-full text-center">{shortLabel}</span>
-              </Link>
-            );
-          })}
+        <div className="game-bottom-nav-glass pointer-events-auto max-w-lg mx-auto">
+          <div className="game-bottom-nav-inner">
+            {NAV.map(({ href, shortLabel, icon: Icon }) => {
+              const active = pathname === href;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={`game-bottom-nav-item no-underline ${
+                    active ? "game-bottom-nav-item-active" : ""
+                  }`}
+                >
+                  {active ? <span className="game-bottom-nav-pill" aria-hidden /> : null}
+                  <Icon className="game-bottom-nav-icon w-5 h-5 shrink-0" />
+                  <span className="game-bottom-nav-label truncate w-full text-center">
+                    {shortLabel}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </nav>
     </>

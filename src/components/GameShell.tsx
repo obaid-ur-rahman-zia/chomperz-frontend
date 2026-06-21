@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode, useCallback } from "react";
-import { GameNav } from "@/components/GameNav";
+import { GameNavDesktop, GameNavMobile } from "@/components/GameNav";
 import { GameHeader } from "@/components/GameHeader";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { usePlayerContext } from "@/context/PlayerContext";
@@ -19,10 +19,11 @@ export function GameShellInner({ children }: { children: ReactNode }) {
       <div className="bg-panel w-full max-w-5xl md:rounded-2xl p-4 md:p-8 pb-24 lg:pb-8 md:shadow-2xl border border-black/60 md:border-gray-800/80 min-h-[100dvh] md:min-h-fit overflow-x-hidden">
         <PullToRefresh onRefresh={handleRefresh}>
           <GameHeader />
-          <GameNav />
+          <GameNavDesktop />
           {children}
         </PullToRefresh>
       </div>
+      <GameNavMobile />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Spinner } from "@/components/Loading";
 import { apiFetch, type OwnedNft, type PlayerData } from "@/lib/api";
@@ -27,6 +28,7 @@ function resolvePendingSource(player: PlayerData): AvatarSource {
 
 export function ProfileAvatarPicker({ player, onUpdated }: ProfileAvatarPickerProps) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [pendingSource, setPendingSource] = useState<AvatarSource>(() =>
     resolvePendingSource(player)
@@ -34,6 +36,19 @@ export function ProfileAvatarPicker({ player, onUpdated }: ProfileAvatarPickerPr
   const [pendingTokenId, setPendingTokenId] = useState<number | null>(
     player.avatarNftTokenId ?? null
   );
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   async function save() {
     setBusy(true);
@@ -69,13 +84,19 @@ export function ProfileAvatarPicker({ player, onUpdated }: ProfileAvatarPickerPr
         Change Profile
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-4 bg-black/60"
-          role="dialog"
-          aria-label="Choose profile picture"
-        >
-          <div className="card w-full max-w-md max-h-[85vh] overflow-y-auto">
+      {open && mounted
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[110] flex items-center justify-center p-4 pb-[max(1rem,calc(env(safe-area-inset-bottom)+5rem))] sm:pb-4 bg-black/60"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Choose profile picture"
+              onClick={() => !busy && setOpen(false)}
+            >
+              <div
+                className="card w-full max-w-md max-h-[min(85dvh,32rem)] overflow-y-auto shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
             <h3 className="text-lg font-black mb-1">Choose Profile</h3>
             <p className="text-xs text-[var(--muted)] font-bold mb-4">
               Default Chomper, Twitter photo, or one of your synced NFTs.
@@ -178,9 +199,11 @@ export function ProfileAvatarPicker({ player, onUpdated }: ProfileAvatarPickerPr
                 {busy ? <Spinner size="sm" /> : "Save"}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </>
   );
 }

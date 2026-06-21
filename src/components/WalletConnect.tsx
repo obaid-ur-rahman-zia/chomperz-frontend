@@ -173,7 +173,7 @@ export function WalletConnect({
   if (!wcEnabled && !metamaskEnabled) {
     return isHeader ? null : (
       <p className="text-xs text-[var(--muted)] font-bold text-center">
-        Enable NEXT_PUBLIC_METAMASK=true and/or set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID.
+        Enable NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID and/or install MetaMask. Set NEXT_PUBLIC_METAMASK=false to hide MetaMask.
       </p>
     );
   }

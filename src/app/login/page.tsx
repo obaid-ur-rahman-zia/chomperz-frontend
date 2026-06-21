@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { apiFetch, setToken } from "@/lib/api";
+import { apiFetch, hasSession, setToken } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { CoinIcon, MapIcon, TrendIcon, XIcon } from "@/components/Icons";
 import { LoadingScreen, Spinner } from "@/components/Loading";
@@ -15,6 +15,11 @@ function LoginContent() {
   const [imgSrc, setImgSrc] = useState("/images/chomper.jpg");
 
   useEffect(() => {
+    if (hasSession()) {
+      window.location.replace("/dashboard");
+      return;
+    }
+
     const err = searchParams.get("error");
     const detail = searchParams.get("error_detail");
     if (err) {
@@ -33,6 +38,8 @@ function LoginContent() {
           "Wrong Client ID or Secret — use OAuth 2.0 keys from the Developer Portal, not Consumer API keys.",
         redirect_uri_mismatch:
           "Callback URL does not match the X Developer Portal. Use http://127.0.0.1:3000/api/auth/twitter/callback exactly.",
+        no_token: "Sign-in completed but no session token was received. Try again.",
+        callback_failed: "Could not save your session. Try signing in again.",
       };
       let msg = messages[err] || "Login failed.";
       if (detail) {

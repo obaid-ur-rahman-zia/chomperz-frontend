@@ -1,44 +1,36 @@
-"use client";
+export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
-import { setToken } from "@/lib/api";
-import { ArrowLeftIcon } from "@/components/Icons";
-import { LoadingScreen } from "@/components/Loading";
-
-export default function AuthCallbackPage() {
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const hash = window.location.hash.slice(1);
-    const params = new URLSearchParams(hash);
-    const token = params.get("token");
-
+/** Runs before React hydrates so sign-in works even if client bundles fail to load. */
+const CALLBACK_SCRIPT = `
+(function () {
+  try {
+    var hash = window.location.hash.slice(1);
+    var token = new URLSearchParams(hash).get("token");
     if (!token) {
-      setError("No session token received. Try signing in again.");
+      window.location.replace("/login?error=no_token");
       return;
     }
-
-    setToken(token);
+    localStorage.setItem("chomperz_token", token);
+    document.cookie = "chomperz_session=1; path=/; max-age=604800; samesite=lax";
     window.location.replace("/dashboard");
-  }, []);
-
-  if (error) {
-    return (
-      <main className="min-h-screen flex items-center justify-center p-6">
-        <div className="card max-w-md w-full text-center">
-          <p className="text-[var(--danger)] font-bold mb-4">{error}</p>
-          <a href="/login" className="btn-primary inline-flex items-center gap-2 no-underline">
-            <ArrowLeftIcon className="w-4 h-4" />
-            Back to login
-          </a>
-        </div>
-      </main>
-    );
+  } catch (e) {
+    window.location.replace("/login?error=callback_failed");
   }
+})();
+`.trim();
 
+export default function AuthCallbackPage() {
   return (
-    <main className="min-h-screen">
-      <LoadingScreen label="Signing you in..." />
-    </main>
+    <>
+      <script dangerouslySetInnerHTML={{ __html: CALLBACK_SCRIPT }} />
+      <main className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <span
+          role="status"
+          aria-label="Loading"
+          className="inline-block w-12 h-12 rounded-full border-[3px] border-[#3a453d] border-t-[var(--green)] animate-spin"
+        />
+        <p className="text-sm font-bold text-[var(--muted)]">Signing you in...</p>
+      </main>
+    </>
   );
 }

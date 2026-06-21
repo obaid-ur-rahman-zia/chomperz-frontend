@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ComponentType } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType,
+} from "react";
 import {
   BoltIcon,
   EditIcon,
@@ -10,7 +17,6 @@ import {
 import {
   apiFetch,
   type ActiveSkillsState,
-  type ActionStatus,
 } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { Spinner } from "@/components/Loading";
@@ -29,31 +35,81 @@ interface ActiveSkillsPanelProps {
 
 export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps) {
   const [skills, setSkills] = useState(initial);
-  const [action, setAction] = useState<ActionStatus>(initial.action);
   const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
     setSkills(initial);
-    setAction(initial.action);
   }, [initial]);
 
-  const pollStatus = useCallback(async () => {
+  const refreshSkills = useCallback(async () => {
     try {
-      const status = await apiFetch<ActionStatus>("/api/player/skills/status");
-      setAction(status);
+      const data = await apiFetch<ActiveSkillsState>("/api/player/skills");
+      setSkills(data);
     } catch {
       /* ignore poll errors */
     }
   }, []);
 
+  const [tickNow, setTickNow] = useState(() => Date.now());
+  const syncedCycleRef = useRef(0);
+
+  const runningDisplay = useMemo(() => {
+    if (
+      skills.action.state !== "running" ||
+      !skills.action.startedAt ||
+      !skills.action.durationMs
+    ) {
+      return null;
+    }
+
+    const started = new Date(skills.action.startedAt).getTime();
+    const duration = skills.action.durationMs;
+    const elapsed = Math.max(0, tickNow - started);
+    const inCycle = elapsed % duration;
+    const remaining = duration - inCycle;
+
+    return {
+      progressPct: Math.min(100, Math.round((inCycle / duration) * 100)),
+      secondsRemaining: Math.max(1, Math.ceil(remaining / 1000)),
+    };
+  }, [skills.action, tickNow]);
+
   useEffect(() => {
-    if (action.state !== "running") return;
-    const id = setInterval(pollStatus, 1000);
+    syncedCycleRef.current = 0;
+  }, [skills.action.startedAt]);
+
+  useEffect(() => {
+    if (
+      skills.action.state !== "running" ||
+      !skills.action.startedAt ||
+      !skills.action.durationMs
+    ) {
+      return;
+    }
+
+    const started = new Date(skills.action.startedAt).getTime();
+    const duration = skills.action.durationMs;
+
+    const id = setInterval(() => {
+      const now = Date.now();
+      setTickNow(now);
+
+      const completedCycles = Math.floor((now - started) / duration);
+      if (completedCycles > syncedCycleRef.current) {
+        syncedCycleRef.current = completedCycles;
+        void refreshSkills();
+      }
+    }, 100);
+
     return () => clearInterval(id);
-  }, [action.state, pollStatus]);
+  }, [
+    skills.action.state,
+    skills.action.startedAt,
+    skills.action.durationMs,
+    refreshSkills,
+  ]);
 
   async function handleSelect(skillId: string) {
-    if (action.state === "running") return;
     setBusy("select");
     try {
       const data = await apiFetch<ActiveSkillsState>("/api/player/skills/select", {
@@ -61,7 +117,7 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
         body: JSON.stringify({ skill: skillId }),
       });
       setSkills(data);
-      setAction(data.action);
+      await onRefresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to select skill");
     } finally {
@@ -76,7 +132,7 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
         method: "POST",
       });
       setSkills(data);
-      setAction(data.action);
+      await onRefresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to start action");
     } finally {
@@ -84,31 +140,8 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
     }
   }
 
-  async function handleComplete() {
-    setBusy("complete");
-    try {
-      const data = await apiFetch<ActiveSkillsState & { result?: { success: boolean } }>(
-        "/api/player/skills/complete",
-        { method: "POST" }
-      );
-      setSkills(data);
-      setAction(data.action);
-      if (data.result?.success) {
-        toast.success("Action complete — reward collected!");
-      } else {
-        toast.error("Action failed — no reward this time.");
-      }
-      await onRefresh();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to complete action");
-    } finally {
-      setBusy(null);
-    }
-  }
-
   const selected = skills.selected;
-  const isRunning = action.state === "running";
-  const isCompleted = action.state === "completed";
+  const isRunning = skills.action.state === "running";
   const needsInput = (selected.inputQuantity ?? 0) > 0;
   const hasInput = !needsInput || (selected.inputQty ?? 0) >= (selected.inputQuantity ?? 0);
 
@@ -127,7 +160,7 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
               key={skill.id}
               type="button"
               onClick={() => handleSelect(skill.id)}
-              disabled={busy !== null || isRunning}
+              disabled={busy !== null}
               className={`bg-dark-card rounded-xl p-2.5 md:p-3 flex flex-col items-center justify-center gap-1.5 transition border ${
                 active
                   ? "border-[var(--green)] shadow-[0_0_8px_rgba(34,197,94,0.15)]"
@@ -162,7 +195,7 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
           Action Rewards
         </div>
         <p className="text-[10px] text-gray-500 font-bold">
-          Action time: {selected.actionDurationSec ?? selected.actionDurationMs! / 1000}s
+          Action time: {selected.actionDurationSec ?? selected.actionDurationMs! / 1000}s · runs continuously
         </p>
         <div className="grid grid-cols-2 gap-1.5 md:gap-2">
           <div className="bg-black/40 border border-green-900/50 rounded flex justify-between items-center px-2 py-1 md:px-2.5 md:py-1.5">
@@ -178,30 +211,26 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
         </div>
         {needsInput && (
           <p className="text-[10px] text-gray-400 font-bold">
-            Requires {selected.inputQuantity} {selected.inputItemId} (have {selected.inputQty ?? 0})
+            Requires {selected.inputQuantity} {selected.inputItemId} per action (have{" "}
+            {selected.inputQty ?? 0})
           </p>
         )}
       </div>
 
       <div className="game-inset p-3 md:p-4 rounded-lg flex flex-col gap-3 md:gap-4">
-        {isCompleted ? (
-          <button
-            type="button"
-            onClick={handleComplete}
-            disabled={busy !== null}
-            className="w-full btn-primary py-2.5 md:py-3 text-xs md:text-sm uppercase tracking-wide disabled:opacity-50"
-          >
-            {busy === "complete" ? <Spinner size="sm" /> : "Collect Reward"}
-          </button>
-        ) : (
+        {!isRunning ? (
           <button
             type="button"
             onClick={handleStart}
-            disabled={busy !== null || isRunning || !hasInput}
+            disabled={busy !== null || !hasInput}
             className="w-full btn-primary py-2.5 md:py-3 text-xs md:text-sm uppercase tracking-wide disabled:opacity-50 shadow-[0_0_10px_rgba(34,197,94,0.2)]"
           >
             {busy === "start" ? <Spinner size="sm" /> : "Start Action"}
           </button>
+        ) : (
+          <p className="text-center text-xs font-bold text-[var(--green)]">
+            Running continuously — rewards apply automatically
+          </p>
         )}
 
         <div className="flex justify-center items-center font-medium text-gray-400 text-[10px] md:text-xs gap-1.5">
@@ -211,21 +240,21 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
           </span>
         </div>
 
-        {(isRunning || isCompleted) && (
+        {isRunning && (
           <div className="pt-2 md:pt-3 border-t border-gray-800/80">
             <div className="flex justify-between items-end mb-1.5 md:mb-2">
               <div className="text-[var(--green)] text-[9px] md:text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
                 <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-[var(--green)] rounded-full animate-pulse" />
-                {isCompleted ? "Complete" : "Running"}
+                Running
               </div>
               <div className="text-xs md:text-sm font-mono font-bold text-gray-400">
-                {action.secondsRemaining}s
+                {(runningDisplay ?? skills.action).secondsRemaining}s
               </div>
             </div>
             <div className="w-full game-progress-track rounded-full h-2 md:h-3 relative overflow-hidden">
               <div
-                className="game-progress-fill h-full rounded-full transition-all duration-1000 ease-linear relative overflow-hidden"
-                style={{ width: `${action.progressPct}%` }}
+                className="game-progress-fill h-full rounded-full relative overflow-hidden"
+                style={{ width: `${(runningDisplay ?? skills.action).progressPct}%` }}
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-white/20 rounded-full" />
               </div>

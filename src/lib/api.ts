@@ -226,15 +226,34 @@ export function formatDuration(ms: number): string {
   return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":");
 }
 
+import {
+  TOKEN_KEY,
+  SESSION_COOKIE,
+  sessionCookieValue,
+  clearSessionCookieValue,
+} from "./auth";
+
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("chomperz_token");
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function hasSession(): boolean {
+  return getToken() !== null;
 }
 
 export function setToken(token: string): void {
-  localStorage.setItem("chomperz_token", token);
+  localStorage.setItem(TOKEN_KEY, token);
+  if (typeof document !== "undefined") {
+    document.cookie = sessionCookieValue();
+  }
 }
 
 export function clearToken(): void {
-  localStorage.removeItem("chomperz_token");
+  localStorage.removeItem(TOKEN_KEY);
+  if (typeof document !== "undefined") {
+    document.cookie = clearSessionCookieValue();
+  }
 }
+
+export { SESSION_COOKIE } from "./auth";

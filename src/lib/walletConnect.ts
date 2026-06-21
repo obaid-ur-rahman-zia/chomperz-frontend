@@ -9,7 +9,7 @@ export function getWalletConnectProjectId(): string | null {
 
 export function isMetaMaskEnabled(): boolean {
   const v = process.env.NEXT_PUBLIC_METAMASK?.trim().toLowerCase();
-  return v === "true" || v === "1" || v === "yes";
+  return v !== "false" && v !== "0" && v !== "no";
 }
 
 export async function connectWalletConnectProvider() {

@@ -18,6 +18,7 @@ export interface PlotPatchPayload {
   name: string;
   ownerWallet: string | null;
   landlordHandle: string | null;
+  landlordAvatarUrl?: string | null;
   status: string;
   lastClaimAt: string | null;
   abandonedAt: string | null;
@@ -33,6 +34,7 @@ function mergePlotPatch(plots: PlotSummary[], patch: PlotPatchPayload): PlotSumm
     name: patch.name,
     ownerWallet: patch.ownerWallet,
     landlordHandle: patch.landlordHandle,
+    landlordAvatarUrl: patch.landlordAvatarUrl ?? null,
     status: patch.status,
     lastClaimAt: patch.lastClaimAt,
     abandonedAt: patch.abandonedAt,

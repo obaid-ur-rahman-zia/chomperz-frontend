@@ -77,7 +77,7 @@ export function UserMenu({
         }
       >
         {avatarOnly ? (
-          <UserAvatar src={avatar} alt={displayName} />
+          <UserAvatar key={avatar} src={avatar} alt={displayName} />
         ) : (
           <>
             <div
@@ -85,7 +85,7 @@ export function UserMenu({
                 compact ? "w-7 h-7 lg:w-8 lg:h-8" : "w-8 h-8"
               }`}
             >
-              <UserAvatar src={avatar} alt={displayName} />
+              <UserAvatar key={avatar} src={avatar} alt={displayName} />
             </div>
             <span
               className={`font-extrabold truncate min-w-0 flex-1 text-left ${
@@ -110,7 +110,7 @@ export function UserMenu({
         >
           <div className="flex items-center gap-3 px-3 py-3 border-b border-white/10">
             <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-[var(--green)] shrink-0">
-              <UserAvatar src={avatar} alt={displayName} />
+              <UserAvatar key={avatar} src={avatar} alt={displayName} />
             </div>
             <p className="text-sm font-extrabold truncate min-w-0">{displayName}</p>
           </div>

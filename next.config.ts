@@ -26,6 +26,18 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "abs.twimg.com",
       },
+      {
+        protocol: "https",
+        hostname: "nft2-cdn.alchemy.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.alchemy.com",
+      },
+      {
+        protocol: "https",
+        hostname: "ipfs.io",
+      },
     ],
   },
   async rewrites() {

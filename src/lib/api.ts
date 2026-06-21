@@ -24,6 +24,8 @@ export interface PlayerEconomy {
 export interface OwnedNft {
   tokenId: number;
   rarity: "common" | "uncommon" | "rare" | "legendary";
+  imageUrl?: string;
+  isCrownBound?: boolean;
 }
 
 export interface ActionStatus {
@@ -93,6 +95,9 @@ export interface PlayerData {
   twitterHandle: string;
   username: string;
   profilePicUrl: string;
+  displayAvatarUrl?: string;
+  avatarSource?: "default" | "twitter" | "nft";
+  avatarNftTokenId?: number | null;
   walletAddress: string | null;
   nftCount: number;
   multiplier: number;

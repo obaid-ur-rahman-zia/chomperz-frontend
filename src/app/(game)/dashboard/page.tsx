@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import { UserAvatar } from "@/components/UserAvatar";
 import { usePlayer } from "@/hooks/usePlayer";
 import { DashboardSkeletonInner, Spinner } from "@/components/Loading";
+import { ProfileAvatarPicker } from "@/components/ProfileAvatarPicker";
 import { ActiveSkillsPanel } from "@/components/ActiveSkillsPanel";
 import {
   BoltIcon,
@@ -35,7 +36,13 @@ export default function DashboardPage() {
 }
 
 function DashboardContent() {
-  const { player, loading, refresh } = usePlayer();
+  const { player, loading, refresh, setPlayer } = usePlayer();
+  const avatarSrc =
+    player?.displayAvatarUrl ||
+    (player?.avatarSource === "default" || !player?.avatarSource
+      ? "/images/chomper.jpg"
+      : player?.profilePicUrl) ||
+    "/images/chomper.jpg";
   const [claimingZ, setClaimingZ] = useState(false);
   const [claimingCoins, setClaimingCoins] = useState(false);
   const [upgrading, setUpgrading] = useState<string | null>(null);
@@ -149,12 +156,11 @@ function DashboardContent() {
         )} */}
         <div className="card h-fit">
           <div className="border-2 md:border-4 border-[var(--green)] rounded-xl overflow-hidden bg-[#c9d0b6] aspect-square flex items-center justify-center mb-4 w-32 md:w-full max-w-sm mx-auto shadow-inner relative">
-            <Image
-              src="/images/chomper.jpg"
+            <UserAvatar
+              key={`${avatarSrc}-${player.avatarSource ?? "default"}-${player.avatarNftTokenId ?? ""}`}
+              src={avatarSrc}
               alt="My Chomper"
-              fill
               className="object-contain"
-              priority
             />
           </div>
 
@@ -164,6 +170,15 @@ function DashboardContent() {
               <StatusDot />
               Actively Farming
             </p>
+            <div className="mt-3 max-w-xs mx-auto">
+              <ProfileAvatarPicker
+                player={player}
+                onUpdated={(updated) => {
+                  setPlayer(updated);
+                  void refresh({ silent: true });
+                }}
+              />
+            </div>
           </div>
 
           <div>

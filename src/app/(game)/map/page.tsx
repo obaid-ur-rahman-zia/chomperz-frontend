@@ -47,6 +47,7 @@ function patchToSummary(patch: PlotPatchPayload): Partial<PlotSummary> {
     name: patch.name,
     ownerWallet: patch.ownerWallet,
     landlordHandle: patch.landlordHandle,
+    landlordAvatarUrl: patch.landlordAvatarUrl ?? null,
     status: patch.status,
     abandonedAt: patch.abandonedAt,
     renters: patch.renters,
@@ -76,7 +77,7 @@ export default function MapPage() {
   }, [selectedId]);
 
   useEffect(() => {
-    async function load() {
+    async function loadPlots() {
       try {
         const { plots: allPlots } = await apiFetch<{ plots: PlotSummary[] }>(
           "/api/plots"
@@ -86,8 +87,15 @@ export default function MapPage() {
         setLoading(false);
       }
     }
-    load();
-  }, []);
+    loadPlots();
+
+    function onPageRefresh() {
+      void loadPlots();
+      void refreshDetail();
+    }
+    window.addEventListener("chomperz:page-refresh", onPageRefresh);
+    return () => window.removeEventListener("chomperz:page-refresh", onPageRefresh);
+  }, [refreshDetail]);
 
   useEffect(() => {
     if (selectedId === null) return;
@@ -107,39 +115,40 @@ export default function MapPage() {
       const plotId = payload.plotId as number | undefined;
       if (plotId === undefined) return;
 
-      if (selectedId === plotId) {
+      const ownerId = payload.ownerId as string | undefined;
+      const isSelf = Boolean(ownerId && player?.id && ownerId === player.id);
+
+      if (event === "bidPlaced" && selectedId === plotId) {
         void refreshDetail();
+        return;
       }
 
       if (event === "landCaptured" || event === "landPurchased") {
-        if (plotId !== selectedId) {
+        if (!isSelf && plotId !== selectedId) {
           toast.info(`Plot #${String(plotId + 1).padStart(2, "0")} was claimed`);
         }
       } else if (event === "landLost") {
-        if (plotId !== selectedId) {
+        if (!isSelf && plotId !== selectedId) {
           toast.info(`Plot #${String(plotId + 1).padStart(2, "0")} was abandoned or lost`);
         }
       }
     },
-    [selectedId, refreshDetail]
+    [selectedId, refreshDetail, player?.id]
   );
 
   const handlePlotPatch = useCallback(
     (patch: PlotPatchPayload) => {
-      if (selectedId === patch.plotId && detail) {
-        setDetail({ ...detail, ...patchToSummary(patch) });
+      if (selectedId === patch.plotId) {
+        setDetail((prev) => (prev ? { ...prev, ...patchToSummary(patch) } : prev));
       }
     },
-    [selectedId, detail]
+    [selectedId]
   );
 
   useTerritorySocket({
     onPlotsChange: setPlots,
     onPlotPatch: handlePlotPatch,
     onEvent: handleSocketEvent,
-    onPoll: () => {
-      if (selectedId !== null) void refreshDetail();
-    },
   });
 
   async function handlePurchase() {
@@ -203,12 +212,13 @@ export default function MapPage() {
     detail?.purchasePrice != null && detail.status === "unclaimed" && !detail.isLegendary;
   const canTakeover = detail?.canTakeover === true;
   const canBid = detail?.status === "owned" && detail.landlordHandle && !detail.isLegendary;
+  const legendaryNftId = detail?.legendaryTokenId ?? null;
   const showLegendaryNftHint =
     detail?.isLegendary === true &&
     detail.status === "unclaimed" &&
     !detail.landlordHandle &&
-    !detail.ownerWallet;
-  const legendaryNftId = detail?.legendaryTokenId ?? (detail ? detail.plotId + 1 : null);
+    !detail.ownerWallet &&
+    legendaryNftId != null;
   const showLoginWarning =
     detail?.loginRemainingMs != null && detail.loginRemainingMs > 0;
 
@@ -227,16 +237,31 @@ export default function MapPage() {
             {plots.map((plot) => {
               const displayNum = String(plot.plotId + 1).padStart(2, "0");
               const isSelected = selectedId === plot.plotId;
+              const showAvatar =
+                plot.status === "owned" && Boolean(plot.landlordAvatarUrl);
               return (
                 <button
                   key={plot.plotId}
                   onClick={() => setSelectedId(plot.plotId)}
                   className={`
-                    aspect-square rounded-md sm:rounded-lg text-[10px] sm:text-xs font-extrabold transition-transform active:scale-95
+                    aspect-square rounded-md sm:rounded-lg text-[10px] sm:text-xs font-extrabold transition-transform active:scale-95 relative overflow-hidden
                     ${plotCellClass(plot, isSelected)}
                   `}
                 >
-                  #{displayNum}
+                  {showAvatar ? (
+                    <>
+                      <UserAvatar
+                        src={plot.landlordAvatarUrl!}
+                        alt={plot.landlordHandle ?? "Owner"}
+                        className="object-cover"
+                      />
+                      <span className="absolute bottom-0 inset-x-0 bg-black/55 text-[8px] sm:text-[9px] py-0.5 leading-none">
+                        #{displayNum}
+                      </span>
+                    </>
+                  ) : (
+                    `#${displayNum}`
+                  )}
                 </button>
               );
             })}
@@ -333,14 +358,12 @@ export default function MapPage() {
                     {detail.isLegendary ? "Legendary Owner" : "Current Landlord"}
                   </p>
                   <div className="flex items-center gap-3">
-                    {!detail.isLegendary && (
-                      <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-[var(--green)] bg-[#1e2420] shrink-0">
-                        <UserAvatar
-                          src={detail.landlordAvatarUrl || "/images/chomper.jpg"}
-                          alt="Landlord"
-                        />
-                      </div>
-                    )}
+                    <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-[var(--green)] bg-[#1e2420] shrink-0">
+                      <UserAvatar
+                        src={detail.landlordAvatarUrl || "/images/chomper.jpg"}
+                        alt="Landlord"
+                      />
+                    </div>
                     <div>
                       <p className="font-extrabold">
                         {detail.landlordHandle ??
@@ -351,11 +374,6 @@ export default function MapPage() {
                       {!detail.isLegendary && (
                         <p className="text-xs text-[var(--muted)] font-bold">
                           Receives {detail.landlordTaxPct ?? 10}% of each renter&apos;s 7-day bid per day
-                        </p>
-                      )}
-                      {detail.isLegendary && detail.ownerWallet && (
-                        <p className="text-xs text-[var(--muted)] font-bold font-mono">
-                          {detail.ownerWallet}
                         </p>
                       )}
                     </div>

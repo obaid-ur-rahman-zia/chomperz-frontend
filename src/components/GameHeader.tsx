@@ -72,7 +72,7 @@ export function GameHeader() {
         </h1>
         <UserMenu
           twitterHandle={player.twitterHandle}
-          profilePicUrl={player.profilePicUrl}
+          profilePicUrl={player.displayAvatarUrl ?? "/images/chomper.jpg"}
           avatarOnly
           className="shrink-0 lg:hidden"
         />
@@ -96,7 +96,7 @@ export function GameHeader() {
 
           <UserMenu
             twitterHandle={player.twitterHandle}
-            profilePicUrl={player.profilePicUrl}
+            profilePicUrl={player.displayAvatarUrl ?? "/images/chomper.jpg"}
             compact
             className="hidden lg:block lg:max-w-[160px]"
           />

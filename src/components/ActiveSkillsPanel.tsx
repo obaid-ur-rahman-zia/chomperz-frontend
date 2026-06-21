@@ -50,6 +50,15 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
     }
   }, []);
 
+  useEffect(() => {
+    function onPageRefresh() {
+      void refreshSkills();
+      void onRefresh();
+    }
+    window.addEventListener("chomperz:page-refresh", onPageRefresh);
+    return () => window.removeEventListener("chomperz:page-refresh", onPageRefresh);
+  }, [refreshSkills, onRefresh]);
+
   const [tickNow, setTickNow] = useState(() => Date.now());
   const syncedCycleRef = useRef(0);
 
@@ -135,6 +144,22 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
       await onRefresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to start action");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function handleStop() {
+    setBusy("stop");
+    try {
+      const data = await apiFetch<ActiveSkillsState>("/api/player/skills/stop", {
+        method: "POST",
+      });
+      setSkills(data);
+      await onRefresh();
+      toast.success("Skill stopped");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to stop action");
     } finally {
       setBusy(null);
     }
@@ -228,9 +253,19 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
             {busy === "start" ? <Spinner size="sm" /> : "Start Action"}
           </button>
         ) : (
-          <p className="text-center text-xs font-bold text-[var(--green)]">
-            Running continuously — rewards apply automatically
-          </p>
+          <>
+            {/* <p className="text-center text-xs font-bold text-[var(--green)]">
+              Running continuously — rewards apply automatically
+            </p> */}
+            <button
+              type="button"
+              onClick={handleStop}
+              disabled={busy !== null}
+              className="w-full btn-danger py-2.5 md:py-3 text-xs md:text-sm uppercase tracking-wide disabled:opacity-50"
+            >
+              {busy === "stop" ? <Spinner size="sm" /> : "Stop Action"}
+            </button>
+          </>
         )}
 
         <div className="flex justify-center items-center font-medium text-gray-400 text-[10px] md:text-xs gap-1.5">

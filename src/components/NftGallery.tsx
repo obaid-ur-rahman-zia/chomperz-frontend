@@ -28,10 +28,14 @@ function rarityTextClass(rarity: RarityTier): string {
   }
 }
 
+function nftImage(nft: OwnedNft): string {
+  return nft.imageUrl || "/images/chomper.jpg";
+}
+
 function sortNfts(nfts: OwnedNft[]): OwnedNft[] {
   return [...nfts].sort((a, b) => {
-    const aCrown = a.tokenId >= 1 && a.tokenId <= 10 ? 0 : 1;
-    const bCrown = b.tokenId >= 1 && b.tokenId <= 10 ? 0 : 1;
+    const aCrown = a.isCrownBound ? 0 : 1;
+    const bCrown = b.isCrownBound ? 0 : 1;
     if (aCrown !== bCrown) return aCrown - bCrown;
     return a.tokenId - b.tokenId;
   });
@@ -68,7 +72,8 @@ export function NftGallery({ nfts, collectionName, walletLinked }: NftGalleryPro
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {sorted.map((nft) => {
-            const isCrown = nft.tokenId >= 1 && nft.tokenId <= 10;
+            const isCrown = Boolean(nft.isCrownBound);
+            const img = nftImage(nft);
             return (
               <div
                 key={nft.tokenId}
@@ -76,19 +81,20 @@ export function NftGallery({ nfts, collectionName, walletLinked }: NftGalleryPro
               >
                 <div className="relative aspect-square bg-[#c9d0b6]">
                   <Image
-                    src="/images/chomper.jpg"
+                    src={img}
                     alt={`Token #${nft.tokenId}`}
                     fill
                     className="object-contain p-2"
                     sizes="(max-width: 640px) 50vw, 160px"
+                    unoptimized={img.startsWith("http")}
                   />
                   {isCrown && (
                     <span
                       className="absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[9px] font-bold text-[var(--gold)]"
-                      title={`Crown Land plot #${String(nft.tokenId).padStart(2, "0")}`}
+                      title="Bound to a Crown Land plot"
                     >
                       <CrownIcon className="w-3 h-3" />
-                      #{String(nft.tokenId).padStart(2, "0")}
+                      Crown
                     </span>
                   )}
                 </div>

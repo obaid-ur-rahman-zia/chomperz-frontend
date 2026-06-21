@@ -34,7 +34,7 @@ function ProfileContent() {
 
   const { economy } = player;
   const chomperLabel = getChomperLabelFromPlayer(player);
-  const avatar = player.profilePicUrl || "/images/chomper.jpg";
+  const avatar = player.displayAvatarUrl || "/images/chomper.jpg";
 
   return (
     <>
@@ -45,7 +45,7 @@ function ProfileContent() {
 
       <div className="card text-center mb-4">
         <div className="relative w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden border-4 border-[var(--green)]">
-          <UserAvatar src={avatar} alt="Profile" />
+          <UserAvatar key={avatar} src={avatar} alt="Profile" />
         </div>
         <h2 className="text-xl font-black">{player.twitterHandle}</h2>
         <p className="text-sm text-[var(--muted)] font-bold mt-1">{chomperLabel}</p>

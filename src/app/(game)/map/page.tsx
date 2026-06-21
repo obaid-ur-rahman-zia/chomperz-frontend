@@ -276,7 +276,7 @@ export default function MapPage() {
           </div>
         </div>
 
-        <div className="card">
+        <div className="card min-w-0 overflow-hidden">
           {detail ? (
             <>
               <h2 className="text-xl font-black text-[var(--green)] mb-1 flex items-center gap-2">
@@ -415,29 +415,28 @@ export default function MapPage() {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-2 mt-6">
+                  <div className="flex flex-col gap-2 mt-6 min-w-0">
                     <label className="text-xs text-gray-400 font-bold">
                       7-day bid (whole Z-Coins, min {detail.minBid ?? 7})
                     </label>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <input
-                        type="number"
-                        min={detail.minBid ?? 7}
-                        step={1}
-                        value={bidAmount}
-                        onChange={(e) => setBidAmount(e.target.value)}
-                        placeholder={`Min. ${detail.minBid ?? 7}`}
-                        className="flex-1 bg-black/30 border-2 border-[#3a453d] rounded-xl px-4 py-3 font-bold text-white outline-none focus:border-[var(--gold)] min-h-[48px]"
-                      />
-                      <button
-                        onClick={handleOutbid}
-                        disabled={bidding}
-                        className="btn-danger px-6 py-3 shrink-0 disabled:opacity-50 min-h-[48px]"
-                      >
-                        <SwordIcon className="w-4 h-4" />
-                        {bidding ? <Spinner size="sm" /> : "BID / EXTEND"}
-                      </button>
-                    </div>
+                    <input
+                      type="number"
+                      min={detail.minBid ?? 7}
+                      step={1}
+                      value={bidAmount}
+                      onChange={(e) => setBidAmount(e.target.value)}
+                      placeholder={`Min. ${detail.minBid ?? 7}`}
+                      className="w-full min-w-0 bg-black/30 border-2 border-[#3a453d] rounded-xl px-4 py-3 font-bold text-white outline-none focus:border-[var(--gold)] min-h-[48px]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleOutbid}
+                      disabled={bidding}
+                      className="btn-danger w-full px-4 py-3 disabled:opacity-50 min-h-[48px]"
+                    >
+                      <SwordIcon className="w-4 h-4 shrink-0" />
+                      {bidding ? <Spinner size="sm" /> : "Bid / Extend"}
+                    </button>
                     {zCoins !== null && (
                       <p className="text-[10px] text-gray-500 font-bold">
                         Your balance: {formatCoins(zCoins)} Z-Coins

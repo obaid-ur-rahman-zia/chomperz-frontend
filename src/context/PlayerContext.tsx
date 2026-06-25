@@ -45,8 +45,9 @@ function PlayerLoadGate({
 }) {
   if (error) {
     return (
-      <main className="min-h-[50vh] flex flex-col items-center justify-center gap-4 px-4 text-center">
-        <p className="text-sm font-bold text-white max-w-md">{error}</p>
+      <main className="min-h-[50vh] flex flex-col items-center justify-center px-4 text-center">
+        <div className="loading-glass-panel max-w-md w-full">
+        <p className="text-sm font-bold text-white">{error}</p>
         <div className="flex flex-wrap items-center justify-center gap-2">
           <SlicedActionButton src={SLICING.mainMenu.button} onClick={onRetry} className="h-10 min-w-[7rem]">
             Try Again
@@ -58,6 +59,7 @@ function PlayerLoadGate({
           >
             Back to Login
           </SlicedActionButton>
+        </div>
         </div>
       </main>
     );
@@ -83,7 +85,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
     try {
       setError(null);
-      const data = await apiFetch<PlayerData>("/api/player/me");
+      const data = await apiFetch<PlayerData>("/api/player/me", { timeoutMs: 45_000 });
       setPlayer(data);
 
       // Sync offline skill progress in background (login uses fast /me without catch-up).

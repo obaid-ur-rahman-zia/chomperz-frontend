@@ -28,11 +28,13 @@ export function Skeleton({ className = "" }: { className?: string }) {
 
 export function LoadingScreen({ label }: { label?: string }) {
   return (
-    <main className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-      <Spinner size="lg" />
-      {label && (
-        <p className="text-sm font-bold text-[var(--muted)]">{label}</p>
-      )}
+    <main className="min-h-[60vh] flex flex-col items-center justify-center px-4">
+      <div className="loading-glass-panel">
+        <Spinner size="lg" />
+        {label && (
+          <p className="text-sm font-bold text-white/80">{label}</p>
+        )}
+      </div>
     </main>
   );
 }
@@ -194,7 +196,7 @@ export function InventorySkeleton() {
 
 export function LeaderboardRowsSkeleton() {
   return (
-    <div className="card p-4 space-y-3" aria-busy="true">
+    <div className="skeleton-wrap space-y-3" aria-busy="true">
       {Array.from({ length: 8 }).map((_, i) => (
         <Skeleton key={i} className="h-10 w-full rounded-lg" />
       ))}

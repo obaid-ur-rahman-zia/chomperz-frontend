@@ -21,7 +21,13 @@ export function SlicedCoinDisplay({
   const display = compact ? formatCoinsCompact(value) : formatCoins(value);
 
   return (
-    <div className={`relative flex items-center min-w-[4.5rem] h-8 md:h-9 ${className}`}>
+    <div
+      className={`relative flex items-center shrink-0 ${
+        compact
+          ? "min-w-[3.25rem] sm:min-w-[4.5rem] h-7 sm:h-8 md:h-9"
+          : "min-w-[4.5rem] h-8 md:h-9"
+      } ${className}`}
+    >
       <Image
         src={SLICING.navbar.currencyBar}
         alt=""
@@ -29,12 +35,25 @@ export function SlicedCoinDisplay({
         className="object-fill"
         unoptimized
       />
-      <div className="relative z-[1] flex items-center gap-1 px-2 w-full">
-        <Image src={icon} alt="" width={20} height={20} className="w-4 h-4 md:w-5 md:h-5 shrink-0" unoptimized />
-        <span
-          className={`text-[10px] md:text-xs font-black tabular-nums truncate ${
-            variant === "zcoin" ? "text-[#facc15]" : "text-white"
+      <div
+        className={`relative z-[1] flex items-center w-full ${
+          compact ? "gap-0.5 px-1 sm:gap-1 sm:px-2" : "gap-1 px-2"
+        }`}
+      >
+        <Image
+          src={icon}
+          alt=""
+          width={20}
+          height={20}
+          className={`shrink-0 ${
+            compact ? "w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" : "w-4 h-4 md:w-5 md:h-5"
           }`}
+          unoptimized
+        />
+        <span
+          className={`font-black tabular-nums truncate ${
+            compact ? "text-[9px] sm:text-[10px] md:text-xs" : "text-[10px] md:text-xs"
+          } ${variant === "zcoin" ? "text-[#facc15]" : "text-white"}`}
         >
           {display}
         </span>

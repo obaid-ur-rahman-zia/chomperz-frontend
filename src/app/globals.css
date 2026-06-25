@@ -525,6 +525,31 @@ body {
   border-radius: 0.5rem;
 }
 
+.dashboard-character-name {
+  font-family: var(--font-grobold), var(--font-nunito), system-ui, sans-serif;
+  color: #fff;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: 0.01em;
+  -webkit-text-stroke: 1.75px #4a2f1a;
+  paint-order: stroke fill;
+  text-shadow:
+    0 2px 0 #4a2f1a,
+    0 3px 6px rgba(0, 0, 0, 0.35);
+}
+
+@media (min-width: 768px) {
+  .dashboard-character-name {
+    -webkit-text-stroke-width: 2.25px;
+  }
+}
+
+.dashboard-character-stat-box {
+  border: 2px dashed #6b5344;
+  border-radius: 0.5rem;
+  background: transparent;
+}
+
 .sliced-game-shell {
   min-height: 100dvh;
   width: 100%;
@@ -539,8 +564,23 @@ body {
   width: 100%;
   max-width: 72rem;
   margin: 0 auto;
-  padding: 0.75rem;
-  padding-bottom: 5.5rem;
+  padding: max(0.5rem, env(safe-area-inset-top)) 0.5rem 5.5rem;
+  padding-left: max(0.5rem, env(safe-area-inset-left));
+  padding-right: max(0.5rem, env(safe-area-inset-right));
+}
+
+.sliced-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+@media (min-width: 640px) {
+  .sliced-game-inner {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
 }
 
 @media (min-width: 1024px) {

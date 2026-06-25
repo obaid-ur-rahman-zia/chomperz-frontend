@@ -59,8 +59,8 @@ function NavTab({
           />
           <span
             className={`font-black leading-none truncate sliced-btn-text ${
-              mobile ? "text-[8px] w-full text-center" : "text-[10px] md:text-[11px]"
-            } ${active ? "text-white" : "text-[#d4c4a8]"}`}
+              mobile ? "text-[8px] hidden w-full text-center" : "text-[10px] md:text-[15px]"
+            } ${active ? "text-white" : "text-[#462517]"}`}
           >
             {displayLabel}
           </span>
@@ -76,7 +76,7 @@ export function SlicedNavDesktop() {
   return (
     <nav
       aria-label="Game navigation"
-      className="hidden lg:block mb-3 relative rounded-xl overflow-hidden"
+      className="hidden lg:block mb-3 relative z-30 rounded-xl overflow-hidden"
     >
       <div className="relative z-[1] grid grid-cols-6 gap-1.5 md:gap-2 p-1.5">
         {NAV_ITEMS.map(({ href, label, icon }) => (
@@ -102,15 +102,7 @@ export function SlicedNavMobile() {
       className="fixed bottom-0 left-0 right-0 z-[100] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden pointer-events-none"
     >
       <div className="pointer-events-auto max-w-lg mx-auto relative">
-        <div className="relative rounded-xl overflow-hidden border-2 border-[#6b4a2e] shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
-          <Image
-            src={SLICING.navbar.bar}
-            alt=""
-            width={600}
-            height={72}
-            className="absolute inset-0 w-full h-full object-fill opacity-95"
-            unoptimized
-          />
+        <div className="relative rounded-xl overflow-hidden ">
           <div className="relative z-[1] flex items-stretch p-1">
             {NAV_ITEMS.map(({ href, label, shortLabel, icon }) => (
               <NavTab

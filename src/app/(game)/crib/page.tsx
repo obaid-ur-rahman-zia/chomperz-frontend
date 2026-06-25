@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { SlicedPage, SlicedActionButton, SlicedImageButton } from "@/components/sliced";
+import { SlicedPage, SlicedActionButton } from "@/components/sliced";
 import { CribOwnedItemsPanel } from "@/components/crib/CribOwnedItemsPanel";
+import { CribControlButton } from "@/components/crib/CribControlButton";
 import {
   SLICING,
   FLOOR_BACKGROUNDS,
@@ -35,6 +36,10 @@ interface PendingPlacement {
   x: number;
   y: number;
   rotation: FurnitureRotation;
+}
+
+interface EditingItem extends PendingPlacement {
+  instanceId: string;
 }
 
 function resolveFloorTexture(floorId: string | null, owned: string[]): string {
@@ -108,8 +113,88 @@ function findEntryAtCell(layout: LayoutEntry[], catalog: FurnitureItem[], x: num
   });
 }
 
+function clampGridPosition(
+  x: number,
+  y: number,
+  w: number,
+  h: number
+): { x: number; y: number } {
+  return {
+    x: Math.max(0, Math.min(GRID_COLS - w, x)),
+    y: Math.max(0, Math.min(GRID_ROWS - h, y)),
+  };
+}
+
 function newInstanceId() {
   return `inst-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function PlacementControls({
+  x,
+  y,
+  w,
+  h,
+  onRotate,
+  onCancel,
+  onConfirm,
+  confirmDisabled,
+  cancelLabel,
+}: {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  onRotate: () => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+  confirmDisabled: boolean;
+  cancelLabel: string;
+}) {
+  return (
+    <>
+      <div
+        className="absolute z-20 pointer-events-auto"
+        style={{
+          left: `${((x + w) / GRID_COLS) * 100}%`,
+          top: `${((y + h * 0.45) / GRID_ROWS) * 100}%`,
+          transform: "translate(8px, -50%)",
+        }}
+      >
+        <CribControlButton
+          bgSrc={SLICING.crib.rotate}
+          variant="rotate"
+          onClick={onRotate}
+          label="Rotate"
+          size={40}
+        />
+      </div>
+
+      <div
+        className="absolute flex gap-2 z-20 pointer-events-auto"
+        style={{
+          left: `${((x + w / 2) / GRID_COLS) * 100}%`,
+          top: `${((y + h) / GRID_ROWS) * 100}%`,
+          transform: "translate(-50%, 10px)",
+        }}
+      >
+        <CribControlButton
+          bgSrc={SLICING.crib.cross}
+          variant="cross"
+          onClick={onCancel}
+          label={cancelLabel}
+          size={36}
+        />
+        <CribControlButton
+          bgSrc={SLICING.crib.tick}
+          variant="tick"
+          onClick={onConfirm}
+          disabled={confirmDisabled}
+          label="Confirm"
+          size={36}
+        />
+      </div>
+    </>
+  );
 }
 
 export default function CribPage() {
@@ -118,10 +203,22 @@ export default function CribPage() {
   const [layout, setLayout] = useState<LayoutEntry[]>([]);
   const [floorId, setFloorId] = useState<string | null>(null);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
-  const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingPlacement | null>(null);
+  const [editing, setEditing] = useState<EditingItem | null>(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const draggingRef = useRef(false);
+  const dragSessionRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    moved: boolean;
+    mode: "editing" | "pending";
+  } | null>(null);
+  const catalogRef = useRef(catalog);
+  catalogRef.current = catalog;
+  const [isDraggingOverlay, setIsDraggingOverlay] = useState(false);
 
   const load = useCallback(async () => {
     const data = await apiFetch<{
@@ -162,9 +259,117 @@ export default function CribPage() {
     return catalog.find((c) => c.id === id);
   }
 
-  function selectPlacedItem(entry: LayoutEntry) {
+  function clientToGrid(clientX: number, clientY: number) {
+    const el = gridRef.current;
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return null;
+    const cellW = rect.width / GRID_COLS;
+    const cellH = rect.height / GRID_ROWS;
+    return {
+      x: Math.floor((clientX - rect.left) / cellW),
+      y: Math.floor((clientY - rect.top) / cellH),
+    };
+  }
+
+  const moveOverlayToCell = useCallback(
+    (x: number, y: number, mode: "editing" | "pending") => {
+      if (mode === "editing") {
+        setEditing((current) => {
+          if (!current) return current;
+          const item = catalogRef.current.find((c) => c.id === current.itemId);
+          if (!item) return current;
+          const { w, h } = getDims(item, current.rotation);
+          const pos = clampGridPosition(x, y, w, h);
+          return { ...current, x: pos.x, y: pos.y };
+        });
+        return;
+      }
+      setPending((current) => {
+        if (!current) return current;
+        const item = catalogRef.current.find((c) => c.id === current.itemId);
+        if (!item) return current;
+        const { w, h } = getDims(item, current.rotation);
+        const pos = clampGridPosition(x, y, w, h);
+        return { ...current, x: pos.x, y: pos.y };
+      });
+    },
+    []
+  );
+
+  useEffect(() => {
+    function endDrag(e: PointerEvent) {
+      const session = dragSessionRef.current;
+      if (!session || e.pointerId !== session.pointerId) return;
+      dragSessionRef.current = null;
+      setIsDraggingOverlay(false);
+      window.setTimeout(() => {
+        draggingRef.current = false;
+      }, 0);
+    }
+
+    function onPointerMove(e: PointerEvent) {
+      const session = dragSessionRef.current;
+      if (!session || e.pointerId !== session.pointerId) return;
+
+      if (e.buttons === 0) {
+        endDrag(e);
+        return;
+      }
+
+      const dx = e.clientX - session.startX;
+      const dy = e.clientY - session.startY;
+      if (!session.moved) {
+        if (Math.hypot(dx, dy) < 8) return;
+        session.moved = true;
+        draggingRef.current = true;
+        setIsDraggingOverlay(true);
+      }
+
+      const grid = clientToGrid(e.clientX, e.clientY);
+      if (grid) moveOverlayToCell(grid.x, grid.y, session.mode);
+    }
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", endDrag);
+    window.addEventListener("pointercancel", endDrag);
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", endDrag);
+      window.removeEventListener("pointercancel", endDrag);
+    };
+  }, [moveOverlayToCell]);
+
+  useEffect(() => {
+    if (!editing && !pending) {
+      dragSessionRef.current = null;
+      draggingRef.current = false;
+      setIsDraggingOverlay(false);
+    }
+  }, [editing, pending]);
+
+  function beginOverlayDrag(e: React.PointerEvent, mode: "editing" | "pending") {
     if (previewMode) return;
-    setSelectedInstanceId(entry.instanceId);
+    e.preventDefault();
+    e.stopPropagation();
+    dragSessionRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      moved: false,
+      mode,
+    };
+    draggingRef.current = false;
+    setIsDraggingOverlay(false);
+  }
+
+  function moveEditingToCell(x: number, y: number) {
+    moveOverlayToCell(x, y, "editing");
+  }
+
+  function startEditing(entry: LayoutEntry) {
+    if (previewMode) return;
+    setEditing({ ...entry });
     setSelectedPlaceId(entry.itemId);
     setPending(null);
   }
@@ -174,30 +379,35 @@ export default function CribPage() {
     if (isFloorItemId(itemId)) {
       setFloorId(itemId);
       setSelectedPlaceId(null);
-      setSelectedInstanceId(null);
+      setEditing(null);
       setPending(null);
       toast.success("Floor applied — tap Save layout");
       return;
     }
     setSelectedPlaceId(itemId);
-    setSelectedInstanceId(null);
+    setEditing(null);
     setPending(null);
     toast.info("Tap the grid to place");
   }
 
   function handleCellClick(x: number, y: number) {
-    if (previewMode) return;
+    if (previewMode || draggingRef.current) return;
+
+    if (editing) {
+      moveEditingToCell(x, y);
+      return;
+    }
 
     const hit = findEntryAtCell(layout, catalog, x, y);
     if (hit) {
-      selectPlacedItem(hit);
+      startEditing(hit);
       return;
     }
 
     if (!selectedPlaceId || isFloorItemId(selectedPlaceId)) return;
     const item = getItem(selectedPlaceId);
     if (!item) return;
-    setSelectedInstanceId(null);
+    setEditing(null);
     setPending({ itemId: selectedPlaceId, x, y, rotation: 0 });
   }
 
@@ -205,16 +415,7 @@ export default function CribPage() {
     if (!pending) return;
     const item = getItem(pending.itemId);
     if (!item) return;
-    if (
-      !isValidPlacement(
-        item,
-        pending.x,
-        pending.y,
-        pending.rotation,
-        layout,
-        catalog
-      )
-    ) {
+    if (!isValidPlacement(item, pending.x, pending.y, pending.rotation, layout, catalog)) {
       toast.error("Invalid placement");
       return;
     }
@@ -230,7 +431,44 @@ export default function CribPage() {
     ]);
     setPending(null);
     setSelectedPlaceId(null);
-    setSelectedInstanceId(null);
+  }
+
+  function confirmEdit() {
+    if (!editing) return;
+    const item = getItem(editing.itemId);
+    if (!item) return;
+    if (
+      !isValidPlacement(
+        item,
+        editing.x,
+        editing.y,
+        editing.rotation,
+        layout,
+        catalog,
+        editing.instanceId
+      )
+    ) {
+      toast.error("Invalid placement");
+      return;
+    }
+    setLayout((prev) =>
+      prev.map((e) =>
+        e.instanceId === editing.instanceId
+          ? { ...e, x: editing.x, y: editing.y, rotation: editing.rotation }
+          : e
+      )
+    );
+    setEditing(null);
+    setSelectedPlaceId(null);
+    toast.success("Item updated");
+  }
+
+  function deleteEditing() {
+    if (!editing) return;
+    setLayout((prev) => prev.filter((e) => e.instanceId !== editing.instanceId));
+    setEditing(null);
+    setSelectedPlaceId(null);
+    toast.success("Item removed");
   }
 
   function cancelPlacement() {
@@ -241,6 +479,12 @@ export default function CribPage() {
     if (!pending) return;
     const next = ((pending.rotation + 1) % 4) as FurnitureRotation;
     setPending({ ...pending, rotation: next });
+  }
+
+  function rotateEditing() {
+    if (!editing) return;
+    const next = ((editing.rotation + 1) % 4) as FurnitureRotation;
+    setEditing({ ...editing, rotation: next });
   }
 
   async function handleSave() {
@@ -255,6 +499,8 @@ export default function CribPage() {
           floorId: floorId && isFloorItemId(floorId) ? floorId : null,
         }),
       });
+      setEditing(null);
+      setPending(null);
       toast.success("Layout saved!");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Save failed");
@@ -266,30 +512,70 @@ export default function CribPage() {
   const ownedItems = catalog.filter((c) => owned.includes(c.id));
   const floorTexture = resolveFloorTexture(floorId, owned);
   const placingFurniture = Boolean(
-    selectedPlaceId && !isFloorItemId(selectedPlaceId) && !pending
+    selectedPlaceId && !isFloorItemId(selectedPlaceId) && !pending && !editing
   );
+
+  const displayLayout = editing
+    ? layout.filter((e) => e.instanceId !== editing.instanceId)
+    : layout;
+
   const pendingItem = pending ? getItem(pending.itemId) : null;
-  const pendingDims = pendingItem ? getDims(pendingItem, pending?.rotation ?? 0) : null;
+  const pendingDims =
+    pending && pendingItem ? getDims(pendingItem, pending.rotation) : null;
   const pendingValid = Boolean(
     pending &&
       pendingItem &&
       pendingDims &&
+      isValidPlacement(pendingItem, pending.x, pending.y, pending.rotation, layout, catalog)
+  );
+
+  const editingItem = editing ? getItem(editing.itemId) : null;
+  const editingDims =
+    editing && editingItem ? getDims(editingItem, editing.rotation) : null;
+  const editingValid = Boolean(
+    editing &&
+      editingItem &&
+      editingDims &&
       isValidPlacement(
-        pendingItem,
-        pending.x,
-        pending.y,
-        pending.rotation,
+        editingItem,
+        editing.x,
+        editing.y,
+        editing.rotation,
         layout,
-        catalog
+        catalog,
+        editing.instanceId
       )
   );
+
+  const activeOverlay = pending
+    ? {
+        kind: "pending" as const,
+        itemId: pending.itemId,
+        rotation: pending.rotation,
+        x: pending.x,
+        y: pending.y,
+        dims: pendingDims!,
+        valid: pendingValid,
+      }
+    : editing && editingDims
+      ? {
+          kind: "editing" as const,
+          itemId: editing.itemId,
+          rotation: editing.rotation,
+          x: editing.x,
+          y: editing.y,
+          dims: editingDims,
+          valid: editingValid,
+        }
+      : null;
 
   return (
     <SlicedPage>
       <div className="flex w-full gap-2 md:gap-3 items-stretch min-w-0">
         <div className="relative flex-1 min-w-0">
           <div
-            className="absolute inset-0 overflow-visible rounded-sm"
+            ref={gridRef}
+            className="absolute inset-0 overflow-visible rounded-sm touch-none"
             style={{
               backgroundImage: `url("${floorTexture}")`,
               backgroundSize: "cover",
@@ -299,9 +585,9 @@ export default function CribPage() {
             {!previewMode && (
               <div
                 className={`absolute inset-0 grid z-[1] ${
-                  placingFurniture || !pending
+                  placingFurniture || (!pending && !editing)
                     ? "opacity-20 pointer-events-auto"
-                    : "opacity-0 pointer-events-none"
+                    : "opacity-30 pointer-events-auto"
                 }`}
                 style={{
                   gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
@@ -324,31 +610,32 @@ export default function CribPage() {
               </div>
             )}
 
-            {layout.map((entry) => {
+            {displayLayout.map((entry) => {
               const item = getItem(entry.itemId);
               if (!item || isFloorItemId(entry.itemId)) return null;
               const dims = getDims(item, entry.rotation);
               const img = getFurnitureImage(entry.itemId, entry.rotation);
-              const isSelected = selectedInstanceId === entry.instanceId;
               return (
                 <button
                   key={entry.instanceId}
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    selectPlacedItem(entry);
+                    startEditing(entry);
                   }}
-                  disabled={previewMode || Boolean(pending)}
+                  disabled={previewMode || Boolean(pending) || Boolean(editing)}
                   className={`absolute z-[2] flex items-center justify-center p-0.5 transition-shadow ${
-                    previewMode || pending ? "pointer-events-none" : "pointer-events-auto cursor-pointer"
-                  } ${isSelected ? "ring-2 ring-[#facc15] ring-offset-1 ring-offset-transparent" : ""}`}
+                    previewMode || pending || editing
+                      ? "pointer-events-none"
+                      : "pointer-events-auto cursor-pointer hover:ring-1 hover:ring-white/40"
+                  }`}
                   style={{
                     left: `${(entry.x / GRID_COLS) * 100}%`,
                     top: `${(entry.y / GRID_ROWS) * 100}%`,
                     width: `${(dims.w / GRID_COLS) * 100}%`,
                     height: `${(dims.h / GRID_ROWS) * 100}%`,
                   }}
-                  aria-label={`Select ${item.name}`}
+                  aria-label={`Edit ${item.name}`}
                 >
                   {img ? (
                     <div className="relative w-full h-full pointer-events-none">
@@ -372,32 +659,40 @@ export default function CribPage() {
               );
             })}
 
-            {pending && pendingItem && pendingDims && (
+            {activeOverlay && (
               <>
                 <div
-                  className="absolute z-[3] pointer-events-none"
+                  className={`absolute z-[3] pointer-events-auto select-none ${
+                    isDraggingOverlay ? "cursor-grabbing" : "cursor-grab"
+                  }`}
                   style={{
-                    left: `${(pending.x / GRID_COLS) * 100}%`,
-                    top: `${(pending.y / GRID_ROWS) * 100}%`,
-                    width: `${(pendingDims.w / GRID_COLS) * 100}%`,
-                    height: `${(pendingDims.h / GRID_ROWS) * 100}%`,
+                    left: `${(activeOverlay.x / GRID_COLS) * 100}%`,
+                    top: `${(activeOverlay.y / GRID_ROWS) * 100}%`,
+                    width: `${(activeOverlay.dims.w / GRID_COLS) * 100}%`,
+                    height: `${(activeOverlay.dims.h / GRID_ROWS) * 100}%`,
                   }}
+                  onPointerDown={(e) =>
+                    beginOverlayDrag(
+                      e,
+                      activeOverlay.kind === "editing" ? "editing" : "pending"
+                    )
+                  }
                 >
-                  <div className="relative w-full h-full">
+                  <div className="relative w-full h-full ring-2 ring-[#facc15]">
                     <Image
                       src={
-                        pendingValid
+                        activeOverlay.valid
                           ? SLICING.crib.correctPlacement
                           : SLICING.crib.wrongPlacement
                       }
                       alt=""
                       fill
-                      className="object-fill opacity-85"
+                      className="object-fill opacity-85 pointer-events-none"
                       unoptimized
                     />
-                    <div className="relative w-full h-full p-1">
+                    <div className="relative w-full h-full p-1 pointer-events-none">
                       <Image
-                        src={getFurnitureImage(pending.itemId, pending.rotation)}
+                        src={getFurnitureImage(activeOverlay.itemId, activeOverlay.rotation)}
                         alt=""
                         fill
                         className="object-contain"
@@ -407,47 +702,23 @@ export default function CribPage() {
                   </div>
                 </div>
 
-                <div
-                  className="absolute z-10"
-                  style={{
-                    left: `${((pending.x + pendingDims.w) / GRID_COLS) * 100}%`,
-                    top: `${((pending.y + pendingDims.h * 0.45) / GRID_ROWS) * 100}%`,
-                    transform: "translate(6px, -50%)",
-                  }}
-                >
-                  <SlicedImageButton
-                    src={SLICING.crib.rotate}
-                    onClick={rotatePending}
-                    label="Rotate"
-                    width={36}
-                    height={36}
-                  />
-                </div>
-
-                <div
-                  className="absolute flex gap-1.5 z-10"
-                  style={{
-                    left: `${((pending.x + pendingDims.w / 2) / GRID_COLS) * 100}%`,
-                    top: `${((pending.y + pendingDims.h) / GRID_ROWS) * 100}%`,
-                    transform: "translate(-50%, 8px)",
-                  }}
-                >
-                  <SlicedImageButton
-                    src={SLICING.crib.cross}
-                    onClick={cancelPlacement}
-                    label="Cancel"
-                    width={32}
-                    height={32}
-                  />
-                  <SlicedImageButton
-                    src={SLICING.crib.tick}
-                    onClick={confirmPlacement}
-                    disabled={!pendingValid}
-                    label="Confirm"
-                    width={32}
-                    height={32}
-                  />
-                </div>
+                <PlacementControls
+                  x={activeOverlay.x}
+                  y={activeOverlay.y}
+                  w={activeOverlay.dims.w}
+                  h={activeOverlay.dims.h}
+                  onRotate={
+                    activeOverlay.kind === "pending" ? rotatePending : rotateEditing
+                  }
+                  onCancel={
+                    activeOverlay.kind === "pending" ? cancelPlacement : deleteEditing
+                  }
+                  onConfirm={
+                    activeOverlay.kind === "pending" ? confirmPlacement : confirmEdit
+                  }
+                  confirmDisabled={!activeOverlay.valid}
+                  cancelLabel={activeOverlay.kind === "pending" ? "Cancel" : "Delete"}
+                />
               </>
             )}
           </div>
@@ -511,7 +782,7 @@ export default function CribPage() {
               onClick={() => {
                 setPreviewMode(false);
                 setPending(null);
-                setSelectedInstanceId(null);
+                setEditing(null);
               }}
               className="flex-1 h-8 md:h-9 text-[10px] md:text-xs"
             >
@@ -523,7 +794,7 @@ export default function CribPage() {
                 setPreviewMode((p) => !p);
                 setPending(null);
                 setSelectedPlaceId(null);
-                setSelectedInstanceId(null);
+                setEditing(null);
               }}
               className="flex-1 h-8 md:h-9 text-[10px] md:text-xs"
             >

@@ -24,8 +24,8 @@ export function GameShellInner({ children }: { children: ReactNode }) {
       style={{ backgroundImage: `url("${background}")` }}
     >
       <div className="sliced-game-inner w-full overflow-x-hidden">
+        <SlicedHeader />
         <PullToRefresh onRefresh={handleRefresh}>
-          <SlicedHeader />
           <SlicedNavDesktop />
           {children}
         </PullToRefresh>

@@ -151,9 +151,6 @@ function LoginContent() {
 
             {process.env.NODE_ENV !== "production" && (
               <div className="w-full border-t border-[#8b7355]/40 pt-3 mt-1">
-                <p className="text-[10px] text-[#5c4a32] mb-2 font-bold">
-                  Dev fallback (MOCK_TWITTER=true on API)
-                </p>
                 <input
                   type="text"
                   placeholder="@YourHandle"
@@ -178,10 +175,6 @@ function LoginContent() {
                 </SlicedActionButton>
               </div>
             )}
-
-            <p className="text-[10px] text-[#5c4a32] font-bold mt-auto pt-2 leading-relaxed">
-              Hatch your Chomper, link your wallet, and claim territory on the map.
-            </p>
           </div>
         </SlicedPanel>
       </div>

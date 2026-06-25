@@ -26,11 +26,15 @@ function NavTab({
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={`relative flex flex-col items-center justify-center no-underline transition-transform active:scale-95 ${
-        mobile ? "flex-1 min-w-0 py-1" : "min-w-0"
+      className={`relative flex items-center justify-center no-underline transition-transform active:scale-[0.98] ${
+        mobile ? "flex-1 min-w-0 py-1" : "min-w-0 w-full"
       }`}
     >
-      <div className={`relative ${mobile ? "w-full h-12" : "w-full h-14 md:h-16"}`}>
+      <div
+        className={`relative w-full ${
+          mobile ? "h-12" : "aspect-[2.35/1] max-h-[4.5rem]"
+        }`}
+      >
         <Image
           src={active ? SLICING.buttons.tabSelected : SLICING.buttons.tabUnselected}
           alt=""
@@ -38,18 +42,24 @@ function NavTab({
           className="object-fill"
           unoptimized
         />
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-1">
+        <div
+          className={`absolute inset-0 flex items-center justify-center px-2 md:px-2.5 ${
+            mobile ? "flex-col gap-0.5" : "flex-row gap-1.5"
+          }`}
+        >
           <Image
             src={icon}
             alt=""
             width={28}
             height={28}
-            className={`${mobile ? "w-5 h-5" : "w-6 h-6 md:w-7 md:h-7"} object-contain`}
+            className={`shrink-0 object-contain ${
+              mobile ? "w-5 h-5" : "w-6 h-6 md:w-7 md:h-7"
+            }`}
             unoptimized
           />
           <span
-            className={`font-black leading-none truncate w-full text-center ${
-              mobile ? "text-[8px]" : "text-[9px] md:text-[10px]"
+            className={`font-black leading-none truncate sliced-btn-text ${
+              mobile ? "text-[8px] w-full text-center" : "text-[10px] md:text-[11px]"
             } ${active ? "text-white" : "text-[#d4c4a8]"}`}
           >
             {displayLabel}
@@ -66,7 +76,7 @@ export function SlicedNavDesktop() {
   return (
     <nav
       aria-label="Game navigation"
-      className="hidden lg:grid lg:grid-cols-6 gap-2 mb-4 md:mb-5"
+      className="hidden lg:grid lg:grid-cols-6 gap-1.5 md:gap-2 mb-3 md:mb-4"
     >
       {NAV_ITEMS.map(({ href, label, icon }) => (
         <NavTab

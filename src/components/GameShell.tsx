@@ -1,12 +1,17 @@
 "use client";
 
 import { ReactNode, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { SlicedNavDesktop, SlicedNavMobile, SlicedHeader } from "@/components/sliced";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { usePlayerContext } from "@/context/PlayerContext";
+import { PAGE_BACKGROUNDS } from "@/lib/slicing-paths";
 
 export function GameShellInner({ children }: { children: ReactNode }) {
   const { refresh } = usePlayerContext();
+  const pathname = usePathname();
+  const background =
+    PAGE_BACKGROUNDS[pathname] ?? PAGE_BACKGROUNDS["/dashboard"];
 
   const handleRefresh = useCallback(async () => {
     await refresh({ silent: true });
@@ -14,7 +19,10 @@ export function GameShellInner({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   return (
-    <div className="sliced-game-shell flex justify-center items-start">
+    <div
+      className="sliced-game-shell flex justify-center items-start"
+      style={{ backgroundImage: `url("${background}")` }}
+    >
       <div className="sliced-game-inner w-full overflow-x-hidden">
         <PullToRefresh onRefresh={handleRefresh}>
           <SlicedHeader />

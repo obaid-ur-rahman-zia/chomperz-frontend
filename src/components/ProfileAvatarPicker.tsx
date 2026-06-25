@@ -15,6 +15,9 @@ interface ProfileAvatarPickerProps {
   player: PlayerData;
   onUpdated: (player: PlayerData) => void;
   triggerClassName?: string;
+  hideTrigger?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 function nftImage(nft: OwnedNft): string {
@@ -31,8 +34,13 @@ export function ProfileAvatarPicker({
   player,
   onUpdated,
   triggerClassName,
+  hideTrigger = false,
+  open: controlledOpen,
+  onOpenChange,
 }: ProfileAvatarPickerProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const [mounted, setMounted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [pendingSource, setPendingSource] = useState<AvatarSource>(() =>
@@ -77,20 +85,22 @@ export function ProfileAvatarPicker({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => {
-          setPendingSource(resolvePendingSource(player));
-          setPendingTokenId(player.avatarNftTokenId ?? null);
-          setOpen(true);
-        }}
-        className={
-          triggerClassName ??
-          "btn-secondary w-full text-xs py-2 min-h-0"
-        }
-      >
-        Change Profile
-      </button>
+      {!hideTrigger ? (
+        <button
+          type="button"
+          onClick={() => {
+            setPendingSource(resolvePendingSource(player));
+            setPendingTokenId(player.avatarNftTokenId ?? null);
+            setOpen(true);
+          }}
+          className={
+            triggerClassName ??
+            "btn-secondary w-full text-xs py-2 min-h-0"
+          }
+        >
+          Change Profile
+        </button>
+      ) : null}
 
       {open && mounted
         ? createPortal(

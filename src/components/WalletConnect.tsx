@@ -12,13 +12,15 @@ import {
 } from "@/lib/walletConnect";
 import { MetaMaskIcon, UnlinkIcon, WalletConnectIcon } from "@/components/Icons";
 import { Spinner } from "@/components/Loading";
+import Image from "next/image";
+import { SLICING } from "@/lib/slicing-paths";
 
 interface WalletConnectProps {
   walletAddress: string | null;
   nftCount?: number;
   onLinked: () => void;
   compact?: boolean;
-  variant?: "default" | "header";
+  variant?: "default" | "header" | "dashboard";
 }
 
 function nftHoverTitle(count: number): string {
@@ -54,6 +56,8 @@ export function WalletConnect({
   const wcEnabled = Boolean(getWalletConnectProjectId());
   const metamaskEnabled = isMetaMaskEnabled();
   const isHeader = variant === "header";
+  const isDashboard = variant === "dashboard";
+  const [showConnectOptions, setShowConnectOptions] = useState(false);
 
   useEffect(() => {
     if (!syncing) setDisplayCount(nftCount);
@@ -129,6 +133,34 @@ export function WalletConnect({
     : "w-full disabled:opacity-50 flex items-center justify-center gap-2.5 font-extrabold rounded-xl px-5 py-3 transition-opacity hover:opacity-90";
 
   if (walletAddress) {
+    if (isDashboard) {
+      return (
+        <div className="w-full space-y-1.5">
+          <p className="text-center text-[10px] font-bold text-[#4ade80] truncate">
+            {walletAddress.slice(0, 8)}...{walletAddress.slice(-6)}
+          </p>
+          <div className="flex gap-1.5 justify-center">
+            <button
+              type="button"
+              onClick={refreshNfts}
+              disabled={loading !== null || syncing}
+              className="text-[9px] font-black text-white bg-black/30 px-2 py-1 rounded disabled:opacity-50"
+            >
+              {syncing ? "Syncing..." : `NFTs (${displayCount})`}
+            </button>
+            <button
+              type="button"
+              onClick={disconnectWallet}
+              disabled={loading !== null || syncing}
+              className="text-[9px] font-black text-red-300 bg-black/30 px-2 py-1 rounded disabled:opacity-50"
+            >
+              Disconnect
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     if (isHeader) {
       return (
         <div className="flex items-center gap-1 shrink-0">
@@ -218,6 +250,63 @@ export function WalletConnect({
       <p className="text-xs text-[var(--muted)] font-bold text-center">
         Enable NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID and/or install MetaMask. Set NEXT_PUBLIC_METAMASK=false to hide MetaMask.
       </p>
+    );
+  }
+
+  if (isDashboard && !showConnectOptions) {
+    return (
+      <button
+        type="button"
+        onClick={() => setShowConnectOptions(true)}
+        disabled={loading !== null}
+        className="relative w-full max-w-[14rem] mx-auto h-11 md:h-12 disabled:opacity-50 transition-transform active:scale-[0.98]"
+      >
+        <Image
+          src={SLICING.mainMenu.connectWallet}
+          alt="Connect To Wallet"
+          fill
+          className="object-contain"
+          unoptimized
+        />
+      </button>
+    );
+  }
+
+  if (isDashboard && showConnectOptions) {
+    return (
+      <div className="w-full max-w-[14rem] mx-auto space-y-1.5">
+        <button
+          type="button"
+          onClick={() => setShowConnectOptions(false)}
+          className="w-full text-[9px] font-bold text-white/70 underline"
+        >
+          Back
+        </button>
+        {metamaskEnabled && (
+          <button
+            type="button"
+            onClick={connectInjected}
+            disabled={loading !== null}
+            className="w-full flex items-center justify-center gap-2 font-extrabold rounded-lg px-3 py-2 text-xs disabled:opacity-50"
+            style={{ background: "#f6851b", color: "#fff" }}
+          >
+            <MetaMaskIcon className="w-5 h-5" />
+            {loading === "metamask" ? <Spinner size="sm" /> : "MetaMask"}
+          </button>
+        )}
+        {wcEnabled && (
+          <button
+            type="button"
+            onClick={connectWithWalletConnect}
+            disabled={loading !== null}
+            className="w-full flex items-center justify-center gap-2 font-extrabold rounded-lg px-3 py-2 text-xs disabled:opacity-50"
+            style={{ background: "#3B99FC", color: "#fff" }}
+          >
+            <WalletConnectIcon className="w-5 h-5" />
+            {loading === "wc" ? <Spinner size="sm" /> : "WalletConnect"}
+          </button>
+        )}
+      </div>
     );
   }
 

@@ -6,3 +6,4 @@ export { SlicedCoinDisplay, SlicedCoinRow } from "./SlicedCoinDisplay";
 export { SlicedSubTabs, SlicedLeaderboardTabs } from "./SlicedSubTabs";
 export { SlicedHeader } from "./SlicedHeader";
 export { SlicedNavDesktop, SlicedNavMobile } from "./SlicedNav";
+export { WalletEarningRow } from "./WalletEarningRow";

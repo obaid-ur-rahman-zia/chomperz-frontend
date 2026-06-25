@@ -46,6 +46,13 @@ export const SLICING = {
     woodInventoryBar: p("Main menu", "Wood in inventory bar.png"),
     timePanel: p("Main menu", "time panel.png"),
   },
+  /** Content insets — titles are baked into panel PNGs */
+  dashboardInsets: {
+    character: "14% 10% 12% 10%",
+    activeSkills: "15% 8% 7% 8%",
+    statUpgrade: "15% 9% 9% 9%",
+    wallet: "15% 9% 9% 9%",
+  },
   skills: {
     bg: p("Skills", "bg.png"),
     panel: p("Skills", "Panel.png"),

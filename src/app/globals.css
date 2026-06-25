@@ -492,20 +492,6 @@ body {
 
 /* ── Sliced UI theme (reference mockups) ── */
 
-.sliced-page {
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
-  border-radius: 0.75rem;
-  overflow: hidden;
-}
-
-@media (min-width: 768px) {
-  .sliced-page {
-    border-radius: 1rem;
-  }
-}
-
 .sliced-title {
   font-family: var(--font-grobold), var(--font-nunito), system-ui, sans-serif;
   text-shadow:
@@ -534,7 +520,12 @@ body {
 
 .sliced-game-shell {
   min-height: 100dvh;
-  background: #1a1208;
+  width: 100%;
+  background-color: #1a1208;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 .sliced-game-inner {

@@ -10,7 +10,7 @@ import { usePlayerContext } from "@/context/PlayerContext";
 function HeaderSkeleton() {
   return (
     <header className="mb-2 sm:mb-3 md:mb-4 max-w-full" aria-busy="true">
-      <Skeleton className="h-12 sm:h-14 md:h-16 w-full rounded-xl" />
+      <Skeleton className="h-12 sm:h-14 md:h-[4.5rem] w-full rounded-xl" />
     </header>
   );
 }
@@ -25,7 +25,7 @@ export function SlicedHeader() {
 
   return (
     <header className="sliced-header sticky top-0 z-40 isolate w-full max-w-full mb-2 sm:mb-3 md:mb-3">
-      <div className="relative w-full h-12 sm:h-14 md:h-16">
+      <div className="relative w-full h-12 sm:h-14 md:h-[4.5rem] lg:h-[4.75rem]">
         <Image
           src={SLICING.navbar.bar}
           alt=""
@@ -35,9 +35,9 @@ export function SlicedHeader() {
           unoptimized
         />
 
-        <div className="absolute inset-0 z-10 flex items-center gap-1 sm:gap-2 px-1.5 sm:px-3 md:px-4 min-w-0 pointer-events-none [&>*]:pointer-events-auto">
-          {/* Logo — height-bound so it stays inside the bar on narrow screens */}
-          <div className="relative z-20 shrink-0 h-[78%] w-[4.25rem] min-[375px]:w-[4.75rem] sm:w-[6.5rem] md:w-[9rem] min-w-0">
+        <div className="absolute inset-0 z-10 flex items-center gap-1.5 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-4 lg:px-5 min-w-0 pointer-events-none [&>*]:pointer-events-auto">
+          {/* Logo */}
+          <div className="relative z-20 shrink-0 h-[76%] md:h-[82%] w-[4.5rem] sm:w-[6.5rem] md:w-[8.5rem] lg:w-[9.5rem] min-w-0">
             <Image
               src={SLICING.logo}
               alt="ChomperZ Idle"
@@ -48,9 +48,9 @@ export function SlicedHeader() {
             />
           </div>
 
-          {/* Search — desktop only */}
-          <div className="hidden md:flex relative z-20 flex-1 justify-center max-w-xs lg:max-w-sm mx-2 min-w-0">
-            <div className="relative w-full h-8 lg:h-9">
+          {/* Search — tablet/desktop */}
+          <div className="hidden md:flex relative z-20 flex-1 min-w-0 max-w-lg mx-1 lg:mx-3">
+            <div className="relative w-full h-9 lg:h-10">
               <Image
                 src={SLICING.navbar.searchBar}
                 alt=""
@@ -58,42 +58,54 @@ export function SlicedHeader() {
                 className="object-fill"
                 unoptimized
               />
-              <div className="absolute inset-0 flex items-center px-3 gap-2">
+              <div className="absolute inset-0 flex items-center px-3 lg:px-4 gap-2">
                 <Image
                   src={SLICING.navbar.searchIcon}
                   alt=""
-                  width={16}
-                  height={16}
-                  className="w-4 h-4 opacity-70 shrink-0"
+                  width={18}
+                  height={18}
+                  className="w-4 h-4 lg:w-[18px] lg:h-[18px] opacity-80 shrink-0"
                   unoptimized
                 />
-                <span className="text-xs text-[#8a8070] font-bold">Search...</span>
+                <span className="text-xs lg:text-sm text-[#b8b0a4] font-bold truncate">
+                  Search...
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Spacer on mobile/tablet — keeps coins + avatar on the right */}
+          {/* Mobile spacer */}
           <div className="flex-1 min-w-0 md:hidden" aria-hidden />
 
           {/* Currency + profile */}
-          <div className="relative z-20 flex items-center gap-0.5 sm:gap-1 md:gap-1.5 shrink-0 min-w-0">
-            <SlicedCoinDisplay value={player.coins ?? 0} variant="coin" compact />
-            <SlicedCoinDisplay value={player.zCoins} variant="zcoin" compact />
+          <div className="relative z-20 flex items-center gap-1 sm:gap-1.5 md:gap-2 shrink-0 min-w-0">
+            <SlicedCoinDisplay
+              value={player.coins ?? 0}
+              variant="coin"
+              compact
+              headerStyle
+              className="md:!min-w-[5rem] md:!h-9 lg:!h-10 lg:!min-w-[5.5rem]"
+            />
+            <SlicedCoinDisplay
+              value={player.zCoins}
+              variant="zcoin"
+              compact
+              headerStyle
+              className="md:!min-w-[5rem] md:!h-9 lg:!h-10 lg:!min-w-[5.5rem]"
+            />
 
-            <div className="hidden lg:block min-w-0">
-              <UserMenu
-                twitterHandle={player.twitterHandle}
-                profilePicUrl={avatar}
-                compact
-                className="max-w-[10rem]"
-              />
-            </div>
+            <UserMenu
+              twitterHandle={player.twitterHandle}
+              profilePicUrl={avatar}
+              headerSplit
+              className="hidden md:flex shrink-0 min-w-0"
+            />
 
             <UserMenu
               twitterHandle={player.twitterHandle}
               profilePicUrl={avatar}
               avatarOnly
-              className="lg:hidden shrink-0"
+              className="md:hidden shrink-0"
             />
           </div>
         </div>

@@ -14,6 +14,8 @@ interface UserMenuProps {
   profilePicUrl?: string | null;
   compact?: boolean;
   avatarOnly?: boolean;
+  /** Reference header: square avatar + separate username pill */
+  headerSplit?: boolean;
   className?: string;
 }
 
@@ -104,6 +106,7 @@ export function UserMenu({
   profilePicUrl,
   compact = false,
   avatarOnly = false,
+  headerSplit = false,
   className = "",
 }: UserMenuProps) {
   const [open, setOpen] = useState(false);
@@ -157,9 +160,46 @@ export function UserMenu({
             className="object-fill pointer-events-none"
             unoptimized
           />
-          <div className="absolute inset-[3px] rounded-full overflow-hidden">
+          <div className="absolute inset-[3px] rounded-sm overflow-hidden">
             <UserAvatar key={avatar} src={avatar} alt={displayName} />
           </div>
+        </button>
+      ) : headerSplit ? (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          aria-label={`${displayName} menu`}
+          className="flex items-center gap-1.5 lg:gap-2 min-w-0 transition-transform active:scale-[0.98]"
+        >
+          <span className="relative shrink-0 w-9 h-9 lg:w-10 lg:h-10">
+            <Image
+              src={SLICING.navbar.profileImage}
+              alt=""
+              fill
+              className="object-fill pointer-events-none"
+              unoptimized
+            />
+            <span className="absolute inset-[3px] lg:inset-1 overflow-hidden rounded-sm block">
+              <UserAvatar key={avatar} src={avatar} alt={displayName} className="object-cover" />
+            </span>
+          </span>
+
+          <span className="relative h-9 lg:h-10 min-w-[6.5rem] max-w-[10rem] lg:max-w-[11rem] flex-1">
+            <Image
+              src={SLICING.navbar.profileNameBar}
+              alt=""
+              fill
+              className="object-fill pointer-events-none"
+              unoptimized
+            />
+            <span className="absolute inset-0 flex items-center px-2.5 lg:px-3 min-w-0">
+              <span className="font-black truncate text-left text-white sliced-btn-text text-xs lg:text-sm">
+                {displayName}
+              </span>
+            </span>
+          </span>
         </button>
       ) : (
         <button

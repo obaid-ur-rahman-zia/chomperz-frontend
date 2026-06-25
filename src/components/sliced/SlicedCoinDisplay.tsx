@@ -8,6 +8,8 @@ interface SlicedCoinDisplayProps {
   value: number;
   variant: "coin" | "zcoin";
   compact?: boolean;
+  /** Reference header: both balances in white on currency pills */
+  headerStyle?: boolean;
   className?: string;
 }
 
@@ -15,6 +17,7 @@ export function SlicedCoinDisplay({
   value,
   variant,
   compact,
+  headerStyle,
   className = "",
 }: SlicedCoinDisplayProps) {
   const icon = variant === "zcoin" ? SLICING.mainMenu.zCoin : SLICING.mainMenu.simpleCoin;
@@ -53,7 +56,7 @@ export function SlicedCoinDisplay({
         <span
           className={`font-black tabular-nums truncate ${
             compact ? "text-[9px] sm:text-[10px] md:text-xs" : "text-[10px] md:text-xs"
-          } ${variant === "zcoin" ? "text-[#facc15]" : "text-white"}`}
+          } ${headerStyle ? "text-white" : variant === "zcoin" ? "text-[#facc15]" : "text-white"}`}
         >
           {display}
         </span>

@@ -183,9 +183,9 @@ export interface FurnitureItem {
 
 export async function apiFetch<T>(
   path: string,
-  options: RequestInit & { token?: string } = {}
+  options: RequestInit & { token?: string; timeoutMs?: number } = {}
 ): Promise<T> {
-  const { token, ...init } = options;
+  const { token, timeoutMs = 30_000, ...init } = options;
   const headers: HeadersInit = {
     ...(init.body ? { "Content-Type": "application/json" } : {}),
     ...(init.headers || {}),
@@ -195,11 +195,25 @@ export async function apiFetch<T>(
     (headers as Record<string, string>)["Authorization"] = `Bearer ${stored}`;
   }
 
-  const res = await fetch(getApiUrl(path), {
-    ...init,
-    headers,
-    credentials: "include",
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  let res: Response;
+  try {
+    res = await fetch(getApiUrl(path), {
+      ...init,
+      headers,
+      credentials: "include",
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error("Request timed out. The server may be busy — try again.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   if (!res.ok) {
     const err = (await res.json().catch(() => ({ error: res.statusText }))) as {
@@ -207,8 +221,9 @@ export async function apiFetch<T>(
       code?: string;
     };
     const message = err.error || "Request failed";
-    const error = new Error(message) as Error & { code?: string };
+    const error = new Error(message) as Error & { code?: string; status?: number };
     if (err.code) error.code = err.code;
+    error.status = res.status;
     throw error;
   }
 

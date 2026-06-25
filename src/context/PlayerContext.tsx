@@ -9,8 +9,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
 import { apiFetch, clearToken, type PlayerData } from "@/lib/api";
+import { LoadingScreen } from "@/components/Loading";
+import { SlicedActionButton } from "@/components/sliced";
+import { SLICING } from "@/lib/slicing-paths";
 
 interface RefreshOptions {
   silent?: boolean;
@@ -27,51 +29,100 @@ interface PlayerContextValue {
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
 
+function isAuthError(err: unknown): boolean {
+  const status = (err as { status?: number })?.status;
+  return status === 401 || status === 403;
+}
+
+function PlayerLoadGate({
+  error,
+  onRetry,
+  onLogout,
+}: {
+  error: string | null;
+  onRetry: () => void;
+  onLogout: () => void;
+}) {
+  if (error) {
+    return (
+      <main className="min-h-[50vh] flex flex-col items-center justify-center gap-4 px-4 text-center">
+        <p className="text-sm font-bold text-white max-w-md">{error}</p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <SlicedActionButton src={SLICING.mainMenu.button} onClick={onRetry} className="h-10 min-w-[7rem]">
+            Try Again
+          </SlicedActionButton>
+          <SlicedActionButton
+            src={SLICING.shop.unselectedButton}
+            onClick={onLogout}
+            className="h-10 min-w-[7rem]"
+          >
+            Back to Login
+          </SlicedActionButton>
+        </div>
+      </main>
+    );
+  }
+
+  return <LoadingScreen label="Loading your Chomper..." />;
+}
+
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const [player, setPlayer] = useState<PlayerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const fetchedRef = useRef(false);
+  const refresh = useCallback(async (options?: RefreshOptions) => {
+    const silent = options?.silent ?? false;
 
-  const refresh = useCallback(
-    async (options?: RefreshOptions) => {
-      const silent = options?.silent ?? false;
+    if (!silent) {
+      setLoading(true);
+    } else {
+      setRefreshing(true);
+    }
 
-      if (!silent && player === null) {
-        setLoading(true);
-      } else if (silent) {
-        setRefreshing(true);
-      }
-
-      try {
-        setError(null);
-        const data = await apiFetch<PlayerData>("/api/player/me");
-        setPlayer(data);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load player");
+    try {
+      setError(null);
+      const data = await apiFetch<PlayerData>("/api/player/me");
+      setPlayer(data);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to load player";
+      if (isAuthError(e)) {
         clearToken();
         window.location.replace("/login");
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
+        return;
       }
-    },
-    [router, player]
-  );
+      setError(message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
-    refresh();
+    void refresh();
   }, [refresh]);
+
+  const showGate = !player && (loading || error !== null);
 
   return (
     <PlayerContext.Provider
       value={{ player, loading, error, refreshing, refresh, setPlayer }}
     >
-      {children}
+      {showGate ? (
+        <PlayerLoadGate
+          error={error}
+          onRetry={() => void refresh()}
+          onLogout={() => {
+            clearToken();
+            window.location.replace("/login");
+          }}
+        />
+      ) : (
+        children
+      )}
     </PlayerContext.Provider>
   );
 }

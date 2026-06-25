@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { apiFetch, clearToken, type PlayerData } from "@/lib/api";
+import { apiFetch, clearToken, type ActiveSkillsState, type PlayerData } from "@/lib/api";
 import { LoadingScreen } from "@/components/Loading";
 import { SlicedActionButton } from "@/components/sliced";
 import { SLICING } from "@/lib/slicing-paths";
@@ -85,6 +85,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       setError(null);
       const data = await apiFetch<PlayerData>("/api/player/me");
       setPlayer(data);
+
+      // Sync offline skill progress in background (login uses fast /me without catch-up).
+      void apiFetch<ActiveSkillsState>("/api/player/skills")
+        .then((activeSkills) => {
+          setPlayer((prev) => (prev ? { ...prev, activeSkills } : prev));
+        })
+        .catch(() => {});
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to load player";
       if (isAuthError(e)) {

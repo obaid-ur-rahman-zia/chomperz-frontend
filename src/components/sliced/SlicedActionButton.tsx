@@ -61,16 +61,19 @@ export function SlicedImageButton({
     <button
       type="button"
       disabled={disabled}
+      aria-label={label}
       className={`relative inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95 ${className}`}
-      style={{ width, height }}
+      style={{ width, height, minWidth: width, minHeight: height }}
       {...props}
     >
-      <Image src={src} alt={label ?? ""} fill className="object-fill pointer-events-none" unoptimized />
-      {label ? (
-        <span className="relative z-[1] text-[10px] md:text-xs font-black text-white sliced-btn-text">
-          {label}
-        </span>
-      ) : null}
+      <Image
+        src={src}
+        alt={label ?? ""}
+        width={width}
+        height={height}
+        className="w-full h-full object-contain pointer-events-none select-none"
+        unoptimized
+      />
     </button>
   );
 }

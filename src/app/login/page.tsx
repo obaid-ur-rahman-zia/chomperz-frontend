@@ -5,14 +5,15 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { apiFetch, clearToken, hasSession, setToken } from "@/lib/api";
 import { toast } from "@/lib/toast";
-import { CoinIcon, MapIcon, TrendIcon, XIcon } from "@/components/Icons";
+import { XIcon } from "@/components/Icons";
 import { LoadingScreen, Spinner } from "@/components/Loading";
+import { SlicedPanel, SlicedActionButton } from "@/components/sliced";
+import { SLICING } from "@/lib/slicing-paths";
 
 function LoginContent() {
   const searchParams = useSearchParams();
   const [mockHandle, setMockHandle] = useState("");
   const [loading, setLoading] = useState(false);
-  const [imgSrc, setImgSrc] = useState("/images/chomper.jpg");
 
   useEffect(() => {
     async function resumeExistingSession() {
@@ -79,86 +80,110 @@ function LoginContent() {
   }
 
   return (
-    <main className="login-page min-h-[100dvh] flex items-center justify-center p-4 sm:p-6">
+    <main
+      className="login-page flex items-center justify-center p-4 sm:p-6"
+      style={{ backgroundImage: `url("${SLICING.mainMenu.bg}")` }}
+    >
       <div className="w-full max-w-md">
-        <div className="relative mx-auto w-full max-w-[240px] sm:max-w-[280px] mb-6">
-          <div className="absolute -inset-3 rounded-3xl bg-[var(--green)]/20 blur-xl" aria-hidden />
-          <div className="relative aspect-square rounded-3xl overflow-hidden border-4 border-[var(--green)] bg-[#1e2420] shadow-[0_0_40px_rgba(76,209,55,0.25)]">
-            <Image
-              src={imgSrc}
-              alt="Chomperz mascot"
-              fill
-              className="object-contain"
-              priority
-              onError={() => setImgSrc("/chomper.svg")}
-            />
-          </div>
+        <div className="flex justify-center mb-4">
+          <Image
+            src={SLICING.logo}
+            alt="ChomperZ Idle"
+            width={220}
+            height={64}
+            className="h-12 sm:h-14 w-auto object-contain drop-shadow-lg"
+            priority
+            unoptimized
+          />
         </div>
 
-        <div className="card text-center">
-          <h1 className="text-3xl sm:text-4xl font-black tracking-wide mb-1">
-            CHOMPERZ
-          </h1>
-          <p className="text-[var(--muted)] mb-5 font-bold text-sm sm:text-base">
-            Sign in to start farming Z-Coins
-          </p>
-
-          <div className="flex flex-wrap justify-center gap-2 mb-6">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#3a453d] bg-black/25 px-3 py-1.5 text-xs font-extrabold text-[var(--gold)]">
-              <CoinIcon className="w-3.5 h-3.5" />
-              Idle Farming
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#3a453d] bg-black/25 px-3 py-1.5 text-xs font-extrabold text-[var(--green)]">
-              <TrendIcon className="w-3.5 h-3.5" />
-              NFT Boost
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#3a453d] bg-black/25 px-3 py-1.5 text-xs font-extrabold text-[var(--blue)]">
-              <MapIcon className="w-3.5 h-3.5" />
-              10×10 Map
-            </span>
-          </div>
-
-          <a
-            href="/api/auth/twitter"
-            className="btn-primary flex items-center justify-center gap-2.5 w-full no-underline py-3.5"
-          >
-            <XIcon className="w-5 h-5 shrink-0" />
-            Sign in with X
-          </a>
-
-          {process.env.NODE_ENV !== "production" && (
-            <div className="border-t border-white/10 pt-6 mt-6">
-              <p className="text-xs text-[var(--muted)] mb-3 font-bold">
-                Dev fallback (requires MOCK_TWITTER=true on API)
-              </p>
-              <input
-                type="text"
-                placeholder="@YourHandle"
-                value={mockHandle}
-                onChange={(e) => setMockHandle(e.target.value)}
-                className="w-full bg-black/30 border-2 border-[#3a453d] rounded-xl px-4 py-3 mb-3 font-bold text-white outline-none focus:border-[var(--gold)]"
+        <SlicedPanel
+          src={SLICING.mainMenu.characterPanel}
+          padding="14% 12% 12% 12%"
+          className="aspect-[4/5] sm:aspect-[5/6] max-h-[34rem]"
+        >
+          <div className="flex flex-col items-center h-full text-center">
+            <div className="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0 mb-2">
+              <Image
+                src={SLICING.assets.chomperFront}
+                alt="Chomper"
+                fill
+                className="object-contain object-bottom drop-shadow-[0_4px_8px_rgba(0,0,0,0.35)]"
+                priority
+                unoptimized
               />
-              <button
-                onClick={handleMockLogin}
-                disabled={loading}
-                className="btn-secondary w-full disabled:opacity-50"
-              >
-                {loading ? (
-                  <>
-                    <Spinner size="sm" />
-                    Signing in...
-                  </>
-                ) : (
-                  "Mock Login"
-                )}
-              </button>
             </div>
-          )}
-        </div>
 
-        <p className="text-center text-[10px] sm:text-xs text-[var(--muted)] font-bold mt-5 px-4">
-          Hatch your Chomper, link your wallet, and claim territory on the map.
-        </p>
+            <h1 className="sliced-title text-xl sm:text-2xl font-black text-white mb-1">
+              CHOMPERZ
+            </h1>
+            <p className="text-[#5c4a32] text-xs sm:text-sm font-bold mb-3">
+              Sign in to start farming Z-Coins
+            </p>
+
+            <div className="flex flex-wrap justify-center gap-1.5 mb-4 w-full">
+              {["Idle Farming", "NFT Boost", "10×10 Map"].map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-[#8b7355]/60 bg-[#e8dcc0]/50 px-2.5 py-1 text-[10px] font-extrabold text-[#3d2516]"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+
+            <a
+              href="/api/auth/twitter"
+              className="relative w-full h-10 sm:h-11 flex items-center justify-center no-underline mb-2 transition-transform active:scale-[0.98]"
+            >
+              <Image
+                src={SLICING.mainMenu.progressiveButton}
+                alt=""
+                fill
+                className="object-fill pointer-events-none"
+                unoptimized
+              />
+              <span className="relative z-[1] inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-black text-white sliced-btn-text">
+                <XIcon className="w-4 h-4 shrink-0" />
+                Sign in with X
+              </span>
+            </a>
+
+            {process.env.NODE_ENV !== "production" && (
+              <div className="w-full border-t border-[#8b7355]/40 pt-3 mt-1">
+                <p className="text-[10px] text-[#5c4a32] mb-2 font-bold">
+                  Dev fallback (MOCK_TWITTER=true on API)
+                </p>
+                <input
+                  type="text"
+                  placeholder="@YourHandle"
+                  value={mockHandle}
+                  onChange={(e) => setMockHandle(e.target.value)}
+                  className="w-full bg-[#e8dcc0]/60 border-2 border-[#8b7355]/50 rounded-lg px-3 py-2 mb-2 font-bold text-[#3d2516] text-sm outline-none focus:border-[#4ade80]"
+                />
+                <SlicedActionButton
+                  src={SLICING.mainMenu.button}
+                  onClick={handleMockLogin}
+                  disabled={loading}
+                  className="w-full h-9"
+                >
+                  {loading ? (
+                    <span className="inline-flex items-center gap-2">
+                      <Spinner size="sm" />
+                      Signing in...
+                    </span>
+                  ) : (
+                    "Mock Login"
+                  )}
+                </SlicedActionButton>
+              </div>
+            )}
+
+            <p className="text-[10px] text-[#5c4a32] font-bold mt-auto pt-2 leading-relaxed">
+              Hatch your Chomper, link your wallet, and claim territory on the map.
+            </p>
+          </div>
+        </SlicedPanel>
       </div>
     </main>
   );
@@ -168,7 +193,10 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <main className="login-page min-h-[100dvh]">
+        <main
+          className="login-page flex items-center justify-center"
+          style={{ backgroundImage: `url("${SLICING.mainMenu.bg}")` }}
+        >
           <LoadingScreen />
         </main>
       }

@@ -1,7 +1,6 @@
 "use client";
 
 import { SLICING } from "@/lib/slicing-paths";
-import { SlicedActionButton } from "./SlicedActionButton";
 import Image from "next/image";
 
 interface SubTab {
@@ -63,19 +62,31 @@ export function SlicedLeaderboardTabs({
   className = "",
 }: SlicedLeaderboardTabsProps) {
   return (
-    <div className={`flex flex-wrap justify-center gap-2 ${className}`}>
+    <div className={`sliced-leaderboard-tabs flex flex-wrap justify-center gap-2 ${className}`}>
       {tabs.map((tab) => {
         const isActive = tab.id === active;
         return (
-          <SlicedActionButton
+          <button
             key={tab.id}
-            src={SLICING.leaderboard.button}
+            type="button"
             onClick={() => onChange(tab.id)}
-            className={`min-w-[6rem] md:min-w-[8rem] ${isActive ? "" : "opacity-75"}`}
-            height={36}
+            className="relative h-9 md:h-10 min-w-[6.5rem] md:min-w-[8rem] transition-transform active:scale-95"
           >
-            {tab.label}
-          </SlicedActionButton>
+            <Image
+              src={isActive ? SLICING.shop.selectedButton : SLICING.shop.unselectedButton}
+              alt=""
+              fill
+              className="object-fill"
+              unoptimized
+            />
+            <span
+              className={`relative z-[1] flex items-center justify-center h-full px-2 text-[9px] md:text-[10px] font-black ${
+                isActive ? "text-white" : "text-[#c4b5a0]"
+              }`}
+            >
+              {tab.label}
+            </span>
+          </button>
         );
       })}
     </div>

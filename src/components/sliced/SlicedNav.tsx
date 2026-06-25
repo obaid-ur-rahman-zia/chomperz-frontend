@@ -76,17 +76,19 @@ export function SlicedNavDesktop() {
   return (
     <nav
       aria-label="Game navigation"
-      className="hidden lg:grid lg:grid-cols-6 gap-1.5 md:gap-2 mb-3 md:mb-4"
+      className="hidden lg:block mb-3 relative rounded-xl overflow-hidden"
     >
-      {NAV_ITEMS.map(({ href, label, icon }) => (
-        <NavTab
-          key={href}
-          href={href}
-          label={label}
-          icon={icon}
-          active={pathname === href}
-        />
-      ))}
+      <div className="relative z-[1] grid grid-cols-6 gap-1.5 md:gap-2 p-1.5">
+        {NAV_ITEMS.map(({ href, label, icon }) => (
+          <NavTab
+            key={href}
+            href={href}
+            label={label}
+            icon={icon}
+            active={pathname === href}
+          />
+        ))}
+      </div>
     </nav>
   );
 }
@@ -99,19 +101,29 @@ export function SlicedNavMobile() {
       aria-label="Mobile game navigation"
       className="fixed bottom-0 left-0 right-0 z-[100] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden pointer-events-none"
     >
-      <div className="pointer-events-auto max-w-lg mx-auto bg-[#2a1f14]/90 rounded-xl border border-[#5c4030] p-1 shadow-2xl">
-        <div className="flex items-stretch">
-          {NAV_ITEMS.map(({ href, label, shortLabel, icon }) => (
-            <NavTab
-              key={href}
-              href={href}
-              label={label}
-              shortLabel={shortLabel}
-              icon={icon}
-              active={pathname === href}
-              mobile
-            />
-          ))}
+      <div className="pointer-events-auto max-w-lg mx-auto relative">
+        <div className="relative rounded-xl overflow-hidden border-2 border-[#6b4a2e] shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+          <Image
+            src={SLICING.navbar.bar}
+            alt=""
+            width={600}
+            height={72}
+            className="absolute inset-0 w-full h-full object-fill opacity-95"
+            unoptimized
+          />
+          <div className="relative z-[1] flex items-stretch p-1">
+            {NAV_ITEMS.map(({ href, label, shortLabel, icon }) => (
+              <NavTab
+                key={href}
+                href={href}
+                label={label}
+                shortLabel={shortLabel}
+                icon={icon}
+                active={pathname === href}
+                mobile
+              />
+            ))}
+          </div>
         </div>
       </div>
     </nav>

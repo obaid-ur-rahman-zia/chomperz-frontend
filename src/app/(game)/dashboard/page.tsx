@@ -141,7 +141,7 @@ function DashboardContent() {
 
   return (
     <SlicedPage>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 auto-rows-fr">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-2 auto-rows-fr">
         <DashboardCharacterPanel
           player={player}
           chomperLabel={chomperLabel}
@@ -164,10 +164,10 @@ function DashboardContent() {
         <SlicedPanel
           src={SLICING.mainMenu.statEarningPanel}
           padding={SLICING.dashboardInsets.statUpgrade}
-          className="min-h-[11rem] md:min-h-[13rem]"
+          className="aspect-[5/3] md:aspect-[2.15/1] min-h-0"
         >
-          <div className="flex flex-col h-full min-h-0">
-            <div className="space-y-2 md:space-y-3 flex-1">
+          <div className="flex flex-col justify-center gap-2 min-h-0">
+            <div className="space-y-2 md:space-y-2.5">
               <div className="flex items-center gap-2">
                 <Image
                   src={SLICING.mainMenu.power}
@@ -239,7 +239,7 @@ function DashboardContent() {
               </div>
             </div>
 
-            <div className="relative mt-auto pt-2 shrink-0">
+            <div className="relative pt-1 shrink-0">
               <Image
                 src={SLICING.mainMenu.timePanel}
                 alt=""
@@ -266,31 +266,29 @@ function DashboardContent() {
         <SlicedPanel
           src={SLICING.mainMenu.statEarningPanel}
           padding={SLICING.dashboardInsets.wallet}
-          className="min-h-[11rem] md:min-h-[13rem]"
+          className="aspect-[5/3] md:aspect-[2.15/1] min-h-0"
         >
-          <div className="flex flex-col h-full min-h-0">
-            <div className="flex-1 space-y-0.5">
-              <WalletEarningRow
-                variant="zcoin"
-                balance={player.zCoins}
-                rate={economy.dailyRate}
-                pending={livePendingZ}
-                onAction={handleClaimZ}
-                actionDisabled={!canClaimZ}
-                actionBusy={claimingZ}
-              />
-              <WalletEarningRow
-                variant="coin"
-                balance={player.coins ?? 0}
-                rate={coinsDailyRate}
-                pending={livePendingCoins}
-                onAction={handleClaimCoins}
-                actionDisabled={!canClaimCoins}
-                actionBusy={claimingCoins}
-              />
-            </div>
+          <div className="flex flex-col justify-center gap-1.5 min-h-0">
+            <WalletEarningRow
+              variant="zcoin"
+              balance={player.zCoins}
+              rate={economy.dailyRate}
+              pending={livePendingZ}
+              onAction={handleClaimZ}
+              actionDisabled={!canClaimZ}
+              actionBusy={claimingZ}
+            />
+            <WalletEarningRow
+              variant="coin"
+              balance={player.coins ?? 0}
+              rate={coinsDailyRate}
+              pending={livePendingCoins}
+              onAction={handleClaimCoins}
+              actionDisabled={!canClaimCoins}
+              actionBusy={claimingCoins}
+            />
 
-            <div className="mt-auto pt-2 flex justify-center w-full shrink-0">
+            <div className="pt-1 flex justify-center w-full shrink-0">
               <WalletConnect
                 walletAddress={player.walletAddress}
                 nftCount={player.nftCount}

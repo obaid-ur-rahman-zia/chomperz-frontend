@@ -20,7 +20,7 @@ export function SlicedPanel({
   padding = "10% 8% 8% 8%",
 }: SlicedPanelProps) {
   return (
-    <div className={`w-full min-w-0 h-full ${className}`}>
+    <div className={`w-full min-w-0 h-full  ${className}`}>
       <div className="grid w-full h-full [&>*]:col-start-1 [&>*]:row-start-1">
         <Image
           src={src}

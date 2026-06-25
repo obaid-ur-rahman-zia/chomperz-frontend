@@ -53,6 +53,16 @@ export const SLICING = {
     statUpgrade: "15% 9% 9% 9%",
     wallet: "15% 9% 9% 9%",
   },
+  mapInsets: {
+    detail: "14% 10% 10% 10%",
+  },
+  leaderboardInsets: {
+    panel: "12% 9% 8% 9%",
+  },
+  cribInsets: {
+    ownedWidth: "34%",
+    ownedContent: "10% 8% 11% 8%",
+  },
   skills: {
     bg: p("Skills", "bg.png"),
     panel: p("Skills", "Panel.png"),
@@ -125,10 +135,19 @@ export const SLICING = {
     ironFloor: p("assets", "Tiles", "Iron Floor.png"),
     fancyTiles: p("assets", "Tiles", "Fancy Tiles.png"),
     woodenChair: p("assets", "Wood Furniture", "Wooden chair.png"),
+    woodenChairBack: p("assets", "Wood Furniture", "back wooden chair.png"),
+    woodenChairSide1: p("assets", "Wood Furniture", "Side wooden chair.png"),
+    woodenChairSide2: p("assets", "Wood Furniture", "side 2 wooden chair.png"),
     woodenTable: p("assets", "Wood Furniture", "Table 1.png"),
     ironChair: p("assets", "Iron Furniture", "Iron Chair.png"),
+    ironChairBack: p("assets", "Iron Furniture", "back iron chair.png"),
+    ironChairSide1: p("assets", "Iron Furniture", "side iron chair.png"),
+    ironChairSide2: p("assets", "Iron Furniture", "2 side iron chair.png"),
     ironTable: p("assets", "Iron Furniture", "Iron Table.png"),
     fancyChair: p("assets", "Fancy furniture", "Fancy chair front.png"),
+    fancyChairBack: p("assets", "Fancy furniture", "fancy chair back.png"),
+    fancyChairSide1: p("assets", "Fancy furniture", "fance chair side.png"),
+    fancyChairSide2: p("assets", "Fancy furniture", "fance chair side 2.png"),
     fancyTable: p("assets", "Fancy furniture", "table.png"),
   },
 } as const;
@@ -147,6 +166,20 @@ export const RESOURCE_ICONS: Record<string, string> = {
   ingot: SLICING.assets.ironBar,
 };
 
+export const FLOOR_ITEM_IDS = ["wood_floor", "iron_floor", "fancy_floor"] as const;
+
+export type FloorItemId = (typeof FLOOR_ITEM_IDS)[number];
+
+export const FLOOR_BACKGROUNDS: Record<FloorItemId, string> = {
+  wood_floor: SLICING.assets.woodenFloor,
+  iron_floor: SLICING.assets.ironFloor,
+  fancy_floor: SLICING.assets.fancyTiles,
+};
+
+export function isFloorItemId(id: string): id is FloorItemId {
+  return (FLOOR_ITEM_IDS as readonly string[]).includes(id);
+}
+
 export const FURNITURE_IMAGES: Record<string, string> = {
   wood_chair: SLICING.assets.woodenChair,
   wood_table: SLICING.assets.woodenTable,
@@ -159,6 +192,74 @@ export const FURNITURE_IMAGES: Record<string, string> = {
   fancy_floor: SLICING.assets.fancyTiles,
   fancy_statue: SLICING.assets.chomperFront,
 };
+
+/** 0=front, 1=right, 2=back, 3=left */
+export type FurnitureRotation = 0 | 1 | 2 | 3;
+
+export const FURNITURE_ROTATION_IMAGES: Record<string, readonly [string, string, string, string]> = {
+  wood_chair: [
+    SLICING.assets.woodenChair,
+    SLICING.assets.woodenChairSide1,
+    SLICING.assets.woodenChairBack,
+    SLICING.assets.woodenChairSide2,
+  ],
+  wood_table: [
+    SLICING.assets.woodenTable,
+    SLICING.assets.woodenTable,
+    SLICING.assets.woodenTable,
+    SLICING.assets.woodenTable,
+  ],
+  iron_chair: [
+    SLICING.assets.ironChair,
+    SLICING.assets.ironChairSide1,
+    SLICING.assets.ironChairBack,
+    SLICING.assets.ironChairSide2,
+  ],
+  iron_table: [
+    SLICING.assets.ironTable,
+    SLICING.assets.ironTable,
+    SLICING.assets.ironTable,
+    SLICING.assets.ironTable,
+  ],
+  fancy_chair: [
+    SLICING.assets.fancyChair,
+    SLICING.assets.fancyChairSide1,
+    SLICING.assets.fancyChairBack,
+    SLICING.assets.fancyChairSide2,
+  ],
+  fancy_table: [
+    SLICING.assets.fancyTable,
+    SLICING.assets.fancyTable,
+    SLICING.assets.fancyTable,
+    SLICING.assets.fancyTable,
+  ],
+  fancy_statue: [
+    SLICING.assets.chomperFront,
+    SLICING.assets.chomperSide1,
+    SLICING.assets.chomperBack,
+    SLICING.assets.chomperSide2,
+  ],
+};
+
+export function normalizeRotation(value?: number | boolean | null): FurnitureRotation {
+  if (typeof value === "boolean") return value ? 1 : 0;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return (((Math.round(value) % 4) + 4) % 4) as FurnitureRotation;
+  }
+  return 0;
+}
+
+export function isSideRotation(rotation: number): boolean {
+  const r = normalizeRotation(rotation);
+  return r === 1 || r === 3;
+}
+
+export function getFurnitureImage(itemId: string, rotation = 0): string {
+  const r = normalizeRotation(rotation);
+  const set = FURNITURE_ROTATION_IMAGES[itemId];
+  if (set) return set[r];
+  return FURNITURE_IMAGES[itemId] ?? "";
+}
 
 export const INVENTORY_CARDS = [
   { itemId: "wood", title: "Wood", subtitle: "Raw Wood", source: "Gathered By WoodCutting", action: "Start Cutting", skill: "woodcutting", route: "/dashboard" },

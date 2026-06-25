@@ -9,6 +9,7 @@ import { apiFetch, formatCoins, type LeaderboardEntry } from "@/lib/api";
 import {
   SlicedPage,
   SlicedLeaderboardTabs,
+  SlicedPanel,
 } from "@/components/sliced";
 import { SLICING } from "@/lib/slicing-paths";
 
@@ -29,6 +30,7 @@ function formatValue(board: BoardId, value: number) {
 function scoreColor(rank: number, isMe: boolean): string {
   if (isMe) return "text-red-400";
   if (rank <= 3) return "text-[#4ade80]";
+  if (rank <= 5) return "text-[#facc15]";
   return "text-[#facc15]";
 }
 
@@ -56,18 +58,14 @@ function LeaderboardContent() {
   const listRows = rows.filter((r) => r.userId !== String(player.id)).slice(0, 10);
 
   return (
-    <SlicedPage bg={SLICING.leaderboard.bg}>
-      <div className="relative w-full max-w-2xl mx-auto">
-        <Image
-          src={SLICING.leaderboard.woodenPanel}
-          alt=""
-          width={600}
-          height={500}
-          className="w-full h-auto pointer-events-none"
-          unoptimized
-        />
-        <div className="absolute inset-0 flex flex-col p-4 md:p-6">
-          <h2 className="sliced-title text-center text-lg md:text-xl text-[#f5d76e] font-black mb-3">
+    <SlicedPage>
+      <SlicedPanel
+        src={SLICING.mainMenu.statEarningPanel}
+        padding={SLICING.leaderboardInsets.panel}
+        className="w-full max-w-3xl mx-auto min-h-[28rem] md:min-h-[32rem]"
+      >
+        <div className="flex flex-col h-full min-h-0">
+          <h2 className="sliced-title text-center text-base md:text-lg text-[#f5d76e] font-black mb-2 shrink-0">
             Leaderboard
           </h2>
 
@@ -75,47 +73,65 @@ function LeaderboardContent() {
             tabs={[...BOARDS]}
             active={board}
             onChange={(id) => setBoard(id as BoardId)}
-            className="mb-4"
+            className="mb-3 shrink-0"
           />
 
           {loading ? (
             <LeaderboardRowsSkeleton />
           ) : (
-            <div className="flex-1 overflow-auto hide-scrollbar space-y-1">
+            <div className="flex-1 overflow-auto hide-scrollbar space-y-1 min-h-0">
               {listRows.map((row) => (
-                <div key={row.userId} className="relative h-10 md:h-11">
-                  <Image src={SLICING.leaderboard.rowPanel} alt="" fill className="object-fill" unoptimized />
+                <div key={row.userId} className="relative h-10 md:h-11 shrink-0">
+                  <Image
+                    src={SLICING.leaderboard.rowPanel}
+                    alt=""
+                    fill
+                    className="object-fill"
+                    unoptimized
+                  />
                   <div className="absolute inset-0 flex items-center gap-2 px-3 text-xs md:text-sm font-bold text-white">
-                    <span className="w-8 text-[#c4b5a0]">#{row.rank}</span>
-                    <div className="relative w-7 h-7 rounded overflow-hidden shrink-0">
+                    <span className="w-8 text-[#c4b5a0] tabular-nums">#{row.rank}</span>
+                    <div className="relative w-7 h-7 rounded overflow-hidden shrink-0 border border-[#4ade80]/40">
                       <UserAvatar src={row.profilePicUrl || "/images/chomper.jpg"} alt="" />
                     </div>
                     <span className="flex-1 truncate">@{row.username}</span>
-                    <span className={scoreColor(row.rank, false)}>{formatValue(board, row.value)}</span>
+                    <span className={`tabular-nums ${scoreColor(row.rank, false)}`}>
+                      {formatValue(board, row.value)}
+                    </span>
                   </div>
                 </div>
               ))}
               {rows.length === 0 && (
-                <p className="text-center text-sm text-white/60 font-bold py-6">No rankings yet.</p>
+                <p className="text-center text-sm text-white/60 font-bold py-6">
+                  No rankings yet.
+                </p>
               )}
             </div>
           )}
 
           {myRow && (
             <div className="relative h-11 md:h-12 mt-2 shrink-0">
-              <Image src={SLICING.leaderboard.ownRowPanel} alt="" fill className="object-fill" unoptimized />
+              <Image
+                src={SLICING.leaderboard.ownRowPanel}
+                alt=""
+                fill
+                className="object-fill"
+                unoptimized
+              />
               <div className="absolute inset-0 flex items-center gap-2 px-3 text-xs md:text-sm font-bold text-white">
-                <span className="w-8">#{myRow.rank}</span>
-                <div className="relative w-7 h-7 rounded overflow-hidden shrink-0">
+                <span className="w-8 tabular-nums text-red-300">#{myRow.rank}</span>
+                <div className="relative w-7 h-7 rounded overflow-hidden shrink-0 border border-red-400/50">
                   <UserAvatar src={myRow.profilePicUrl || "/images/chomper.jpg"} alt="" />
                 </div>
-                <span className="flex-1 truncate">@{myRow.username}</span>
-                <span className={scoreColor(myRow.rank, true)}>{formatValue(board, myRow.value)}</span>
+                <span className="flex-1 truncate text-red-200">@{myRow.username}</span>
+                <span className={`tabular-nums ${scoreColor(myRow.rank, true)}`}>
+                  {formatValue(board, myRow.value)}
+                </span>
               </div>
             </div>
           )}
         </div>
-      </div>
+      </SlicedPanel>
     </SlicedPage>
   );
 }

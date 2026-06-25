@@ -24,7 +24,7 @@ export function SlicedHeader() {
   const avatar = player.displayAvatarUrl ?? "/images/chomper.jpg";
 
   return (
-    <header className="relative w-full mb-3 md:mb-4">
+    <header className="relative w-full mb-3 md:mb-0">
       <div className="relative w-full min-h-[3.25rem] md:min-h-[4rem]">
         <Image
           src={SLICING.navbar.bar}

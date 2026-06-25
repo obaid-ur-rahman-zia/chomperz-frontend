@@ -259,22 +259,25 @@ export function WalletConnect({
         type="button"
         onClick={() => setShowConnectOptions(true)}
         disabled={loading !== null}
-        className="relative w-full max-w-[14rem] mx-auto h-11 md:h-12 disabled:opacity-50 transition-transform active:scale-[0.98]"
+        className="relative w-full h-10 md:h-11 disabled:opacity-50 transition-transform active:scale-[0.98]"
       >
         <Image
           src={SLICING.mainMenu.connectWallet}
-          alt="Connect To Wallet"
+          alt=""
           fill
-          className="object-contain"
+          className="object-fill pointer-events-none"
           unoptimized
         />
+        <span className="relative z-[1] text-[11px] md:text-xs font-black text-white sliced-btn-text tracking-wide">
+          Connect To Wallet
+        </span>
       </button>
     );
   }
 
   if (isDashboard && showConnectOptions) {
     return (
-      <div className="w-full max-w-[14rem] mx-auto space-y-1.5">
+      <div className="w-full space-y-1.5">
         <button
           type="button"
           onClick={() => setShowConnectOptions(false)}

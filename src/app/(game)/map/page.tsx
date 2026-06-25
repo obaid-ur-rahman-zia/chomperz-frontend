@@ -4,38 +4,37 @@ import { useCallback, useEffect, useState } from "react";
 import { UserAvatar } from "@/components/UserAvatar";
 import {
   apiFetch,
-  formatCoins,
   formatDuration,
   type PlotDetail,
   type PlotSummary,
 } from "@/lib/api";
-import {
-  CoinIcon,
-  CrownIcon,
-  MapIcon,
-  PlotIcon,
-  SwordIcon,
-} from "@/components/Icons";
+import { CrownIcon } from "@/components/Icons";
 import { usePlayer } from "@/hooks/usePlayer";
 import { useTerritorySocket, type PlotPatchPayload } from "@/hooks/useTerritorySocket";
 import { toast } from "@/lib/toast";
+import { SlicedPage, SlicedImageButton } from "@/components/sliced";
+import { SLICING } from "@/lib/slicing-paths";
+import Image from "next/image";
 import { MapSkeleton, PlotDetailSkeleton, Spinner } from "@/components/Loading";
 
+function plotCellBg(plot: PlotSummary): string | null {
+  if (plot.isLegendary) return SLICING.map.crownPanel;
+  if (plot.status === "owned") return SLICING.map.ownedPanel;
+  if (plot.status === "abandoned") return SLICING.map.abandonedPanel;
+  return null;
+}
+
 function plotCellClass(plot: PlotSummary, isSelected: boolean): string {
-  if (isSelected) return "bg-[var(--green)] text-black border-2 border-white";
-
-  if (plot.isLegendary) {
-    return "border-2 border-[var(--gold)] text-[var(--gold)] bg-[#3a3520] shadow-[0_0_10px_rgba(251,197,49,0.3)]";
-  }
-
+  const base = "aspect-square rounded text-[8px] sm:text-[9px] font-extrabold transition-transform active:scale-95 relative overflow-hidden";
+  if (isSelected) return `${base} ring-2 ring-white ring-offset-1 ring-offset-transparent z-[2]`;
+  if (plot.isLegendary) return `${base} text-[var(--gold)]`;
   switch (plot.status) {
     case "owned":
-      return "bg-[#2d4a35] text-[var(--green)] border border-[var(--green)]/40";
+      return `${base} text-[var(--green)]`;
     case "abandoned":
-      return "bg-[#4a3030] text-[#e88] border border-red-500/40";
-    case "unclaimed":
+      return `${base} text-red-300`;
     default:
-      return "bg-[#3a453d] text-[var(--muted)]";
+      return `${base} text-white/80 border border-[#4ade80]/50 bg-black/20`;
   }
 }
 
@@ -65,8 +64,6 @@ export default function MapPage() {
   const [purchasing, setPurchasing] = useState(false);
   const [takingOver, setTakingOver] = useState(false);
   const [loginCountdownMs, setLoginCountdownMs] = useState<number | null>(null);
-
-  const zCoins = player?.zCoins ?? null;
 
   const refreshDetail = useCallback(async () => {
     if (selectedId === null) return;
@@ -223,67 +220,54 @@ export default function MapPage() {
     detail?.loginRemainingMs != null && detail.loginRemainingMs > 0;
 
   return (
-    <>
-      <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
-        <MapIcon className="w-6 h-6 text-[var(--green)] shrink-0" />
-        Territory Map
-      </h2>
-
-      <div className="grid lg:grid-cols-[1.2fr_1fr] gap-4 lg:gap-6">
-        <div className="card">
-          <h3 className="stat-label mb-3">Select a Plot</h3>
-          <div className="overflow-x-auto -mx-1 px-1 pb-1">
-            <div className="grid grid-cols-10 gap-1 min-w-[280px] sm:min-w-0 sm:gap-1.5">
+    <SlicedPage bg={SLICING.map.bg}>
+      <div className="grid lg:grid-cols-[1.2fr_1fr] gap-3 md:gap-4">
+        <div className="overflow-x-auto pb-1">
+          <div className="grid grid-cols-10 gap-0.5 sm:gap-1 min-w-[280px] p-1">
             {plots.map((plot) => {
               const displayNum = String(plot.plotId + 1).padStart(2, "0");
               const isSelected = selectedId === plot.plotId;
-              const showAvatar =
-                plot.status === "owned" && Boolean(plot.landlordAvatarUrl);
+              const bgImg = plotCellBg(plot);
+              const handle = plot.landlordHandle;
               return (
                 <button
                   key={plot.plotId}
                   onClick={() => setSelectedId(plot.plotId)}
-                  className={`
-                    aspect-square rounded-md sm:rounded-lg text-[10px] sm:text-xs font-extrabold transition-transform active:scale-95 relative overflow-hidden
-                    ${plotCellClass(plot, isSelected)}
-                  `}
+                  className={plotCellClass(plot, isSelected)}
                 >
-                  {showAvatar ? (
-                    <>
-                      <UserAvatar
-                        src={plot.landlordAvatarUrl!}
-                        alt={plot.landlordHandle ?? "Owner"}
-                        className="object-cover"
-                      />
-                      <span className="absolute bottom-0 inset-x-0 bg-black/55 text-[8px] sm:text-[9px] py-0.5 leading-none">
-                        #{displayNum}
-                      </span>
-                    </>
-                  ) : (
-                    `#${displayNum}`
-                  )}
+                  {bgImg ? (
+                    <Image src={bgImg} alt="" fill className="object-cover opacity-90" unoptimized />
+                  ) : null}
+                  <span className="relative z-[1] block text-center leading-tight p-0.5">
+                    <span className="block text-[7px] sm:text-[8px]">{displayNum}</span>
+                    {plot.status === "abandoned" ? (
+                      <span className="block text-[6px] sm:text-[7px] opacity-80">Abandoned</span>
+                    ) : handle ? (
+                      <span className="block text-[6px] sm:text-[7px] truncate">@{handle}</span>
+                    ) : null}
+                  </span>
                 </button>
               );
             })}
-            </div>
-          </div>
-          <div className="text-xs text-[var(--muted)] font-bold mt-4 space-y-1">
-            <p className="flex items-center gap-1.5">
-              <CrownIcon className="text-[var(--gold)]" />
-              <span><span className="text-[var(--gold)]">Gold</span> = Legendary (NFT-linked)</span>
-            </p>
-            <p><span className="text-[var(--green)]">Green</span> = Owned · <span className="text-red-400">Red</span> = Abandoned · Log in every 7 days to keep land</p>
           </div>
         </div>
 
-        <div className="card min-w-0 overflow-hidden">
+        <div className="relative min-w-0">
+          <Image
+            src={SLICING.map.woodenPanel}
+            alt=""
+            width={400}
+            height={500}
+            className="w-full h-auto pointer-events-none"
+            unoptimized
+          />
+          <div className="absolute inset-0 flex flex-col p-4 md:p-5 overflow-auto hide-scrollbar">
           {detail ? (
             <>
-              <h2 className="text-xl font-black text-[var(--green)] mb-1 flex items-center gap-2">
-                <PlotIcon />
-                PLOT #{detail.displayId ?? String(detail.plotId + 1).padStart(2, "0")}
+              <h2 className="sliced-title text-lg font-black text-white mb-0.5">
+                Plot #{detail.displayId ?? String(detail.plotId + 1).padStart(2, "0")}
               </h2>
-              <p className="text-[var(--muted)] font-bold mb-2">{detail.name}</p>
+              <p className="text-[#c4b5a0] text-xs font-bold mb-3">{detail.name}</p>
               <p className="text-xs font-bold text-gray-400 mb-4">
                 {detail.landType ?? (detail.isLegendary ? "Legendary" : "Frontier")}
                 {detail.isLegendary && detail.legendaryTokenId != null && (
@@ -352,30 +336,30 @@ export default function MapPage() {
               )}
 
               {(detail.landlordHandle || detail.ownerWallet) && (
-                <div className="bg-black/25 rounded-2xl p-4 mb-4 border border-[var(--gold)]/20">
-                  <p className="stat-label mb-3 flex items-center gap-1.5 text-[var(--gold)]">
-                    <CrownIcon className="w-4 h-4" />
-                    {detail.isLegendary ? "Legendary Owner" : "Current Landlord"}
-                  </p>
+                <div
+                  className="relative mb-3 p-3 rounded"
+                  style={{
+                    backgroundImage: `url("${SLICING.map.playerCardBg}")`,
+                    backgroundSize: "100% 100%",
+                  }}
+                >
                   <div className="flex items-center gap-3">
-                    <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-[var(--green)] bg-[#1e2420] shrink-0">
+                    <div className="relative w-12 h-12 rounded overflow-hidden border-2 border-[#4ade80] shrink-0">
                       <UserAvatar
                         src={detail.landlordAvatarUrl || "/images/chomper.jpg"}
                         alt="Landlord"
                       />
                     </div>
-                    <div>
-                      <p className="font-extrabold">
-                        {detail.landlordHandle ??
-                          (detail.ownerWallet
-                            ? `${detail.ownerWallet.slice(0, 6)}…${detail.ownerWallet.slice(-4)}`
-                            : "Unknown")}
+                    <div className="text-xs font-bold">
+                      <p className="text-[#4ade80]">
+                        Status: <span className="text-white">Current LandLord</span>
                       </p>
-                      {!detail.isLegendary && (
-                        <p className="text-xs text-[var(--muted)] font-bold">
-                          Receives {detail.landlordTaxPct ?? 10}% of each renter&apos;s 7-day bid per day
-                        </p>
-                      )}
+                      <p className="text-white">
+                        Name: @{detail.landlordHandle ?? "unknown"}
+                      </p>
+                      <p className="text-[#c4b5a0] text-[10px]">
+                        Earning: Takes {detail.landlordTaxPct ?? 10}% of all rent Collected
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -383,65 +367,51 @@ export default function MapPage() {
 
               {canBid && (
                 <>
-                  <div className="mb-4">
-                    <p className="stat-label mb-3 flex items-center gap-1.5">
-                      <SwordIcon />
-                      Active Renters (Max 3)
+                  <div className="mb-3">
+                    <p className="text-[10px] font-black text-[#f5d76e] uppercase mb-2">
+                      Active Renter (Max 3)
                     </p>
                     {detail.renters.length === 0 ? (
-                      <p className="text-sm text-[var(--muted)] font-bold">No renters yet</p>
+                      <p className="text-xs text-[#c4b5a0] font-bold">No renters yet</p>
                     ) : (
-                      <ul className="space-y-2">
+                      <ul className="space-y-1.5">
                         {detail.renters.map((r, i) => (
-                          <li
-                            key={r.walletAddress}
-                            className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-black/15 rounded-xl px-3 py-2.5 text-sm font-bold gap-1"
-                          >
-                            <span>
-                              {i + 1}. {r.twitterHandle || `${r.walletAddress.slice(0, 8)}...`}
-                            </span>
-                            <span className="text-[var(--gold)] flex items-center gap-1 flex-wrap">
-                              <CoinIcon className="w-3.5 h-3.5" />
-                              {r.sevenDayBid ?? r.escrowBalance} Z / 7 days
-                              {r.leaseExpiresAt && (
-                                <span className="text-[10px] text-gray-400">
-                                  · until {new Date(r.leaseExpiresAt).toLocaleDateString()}
-                                </span>
-                              )}
-                            </span>
+                          <li key={r.walletAddress} className="relative h-8">
+                            <Image src={SLICING.map.renterBar} alt="" fill className="object-fill" unoptimized />
+                            <div className="absolute inset-0 flex justify-between items-center px-2 text-[10px] font-bold text-white">
+                              <span>
+                                {i + 1}. @{r.twitterHandle || r.walletAddress.slice(0, 8)}
+                              </span>
+                              <span className="text-[#4ade80]">
+                                ${r.sevenDayBid ?? r.escrowBalance} / Day
+                              </span>
+                            </div>
                           </li>
                         ))}
                       </ul>
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-2 mt-6 min-w-0">
-                    <label className="text-xs text-gray-400 font-bold">
-                      7-day bid (whole Z-Coins, min {detail.minBid ?? 7})
-                    </label>
-                    <input
-                      type="number"
-                      min={detail.minBid ?? 7}
-                      step={1}
-                      value={bidAmount}
-                      onChange={(e) => setBidAmount(e.target.value)}
-                      placeholder={`Min. ${detail.minBid ?? 7}`}
-                      className="w-full min-w-0 bg-black/30 border-2 border-[#3a453d] rounded-xl px-4 py-3 font-bold text-white outline-none focus:border-[var(--gold)] min-h-[48px]"
-                    />
-                    <button
-                      type="button"
+                  <div className="flex gap-2 mt-auto items-end">
+                    <div className="relative flex-1 h-10">
+                      <Image src={SLICING.map.bidBar} alt="" fill className="object-fill" unoptimized />
+                      <input
+                        type="number"
+                        min={detail.minBid ?? 7}
+                        step={1}
+                        value={bidAmount}
+                        onChange={(e) => setBidAmount(e.target.value)}
+                        className="absolute inset-0 bg-transparent px-3 font-black text-white text-sm outline-none w-full"
+                      />
+                    </div>
+                    <SlicedImageButton
+                      src={SLICING.map.outbidButton}
+                      label="Outbid"
                       onClick={handleOutbid}
                       disabled={bidding}
-                      className="btn-danger w-full px-4 py-3 disabled:opacity-50 min-h-[48px]"
-                    >
-                      <SwordIcon className="w-4 h-4 shrink-0" />
-                      {bidding ? <Spinner size="sm" /> : "Bid / Extend"}
-                    </button>
-                    {zCoins !== null && (
-                      <p className="text-[10px] text-gray-500 font-bold">
-                        Your balance: {formatCoins(zCoins)} Z-Coins
-                      </p>
-                    )}
+                      width={100}
+                      height={40}
+                    />
                   </div>
                 </>
               )}
@@ -449,10 +419,11 @@ export default function MapPage() {
           ) : selectedId !== null ? (
             <PlotDetailSkeleton />
           ) : (
-            <p className="text-[var(--muted)] font-bold">Select a plot</p>
+            <p className="text-[#c4b5a0] font-bold text-sm">Select a plot</p>
           )}
+          </div>
         </div>
       </div>
-    </>
+    </SlicedPage>
   );
 }

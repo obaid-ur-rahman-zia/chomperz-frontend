@@ -1,17 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { UserAvatar } from "@/components/UserAvatar";
 import { usePlayer } from "@/hooks/usePlayer";
 import { DashboardSkeletonInner, Spinner } from "@/components/Loading";
 import { ProfileAvatarPicker } from "@/components/ProfileAvatarPicker";
 import { ActiveSkillsPanel } from "@/components/ActiveSkillsPanel";
+import { WalletConnect } from "@/components/WalletConnect";
+import { StatusDot } from "@/components/Icons";
 import {
-  BoltIcon,
-  CoinIcon,
-  SpeedIcon,
-  StatusDot,
-} from "@/components/Icons";
+  SlicedPage,
+  SlicedPanel,
+  SlicedActionButton,
+  SlicedCoinRow,
+} from "@/components/sliced";
+import { SLICING } from "@/lib/slicing-paths";
 import {
   apiFetch,
   formatCoins,
@@ -22,14 +26,6 @@ import { MIN_ZCOIN_CLAIM, MIN_COIN_CLAIM } from "@/lib/economy";
 import { useLivePendingCoins, useLivePendingZCoins } from "@/hooks/useLiveEarnings";
 import { getChomperLabelFromPlayer } from "@/lib/chomper";
 import { toast } from "@/lib/toast";
-
-function ClaimArrowIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-    </svg>
-  );
-}
 
 export default function DashboardPage() {
   return <DashboardContent />;
@@ -141,249 +137,197 @@ function DashboardContent() {
   const activeSkills = player.activeSkills;
   const speedUpgrading = player.isSpeedUpgrading && speedRemaining > 0;
   const powerUpgrading = player.isPowerUpgrading && powerRemaining > 0;
+  const upgradeRemaining = Math.max(powerRemaining, speedRemaining);
+
+  const rarityLabel =
+    player.nftCount === 0
+      ? "No NFT"
+      : economy.rarityBoost >= 0.12
+        ? "Rare+"
+        : economy.rarityBoost >= 0.05
+          ? "Uncommon"
+          : "Common";
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        {/* {player.isDevNftCollection && (
-          <div className="lg:col-span-2 rounded-xl border border-[var(--gold)]/40 bg-[var(--gold)]/10 px-4 py-3 text-xs md:text-sm font-bold text-[var(--gold)]">
-            Testing with demo collection: {player.nftCollectionName}
-            {player.nftContractAddress ? (
-              <span className="block text-[10px] text-[var(--muted)] font-mono mt-1 truncate">
-                {player.nftContractAddress}
-              </span>
-            ) : null}
-          </div>
-        )} */}
-        <div className="card h-fit">
-          <div className="border-2 md:border-4 border-[var(--green)] rounded-xl overflow-hidden bg-[#c9d0b6] aspect-square flex items-center justify-center mb-4 w-32 md:w-full max-w-sm mx-auto shadow-inner relative">
-            <UserAvatar
-              key={`${avatarSrc}-${player.avatarSource ?? "default"}-${player.avatarNftTokenId ?? ""}`}
-              src={avatarSrc}
-              alt="My Chomper"
-              className="object-contain"
-            />
-          </div>
+    <SlicedPage>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
+        {/* Top-left: Character — reference: chomper left, info right on parchment */}
+        <SlicedPanel
+          src={SLICING.mainMenu.characterPanel}
+          padding="14% 8% 10% 8%"
+        >
+          <div className="flex h-full gap-2 md:gap-3 items-stretch min-h-0">
+            {/* Parchment portrait slot */}
+            <div className="relative w-[38%] max-w-[7.5rem] shrink-0 flex items-center justify-center">
+              <div className="relative w-full aspect-[4/5] rounded-md overflow-hidden bg-[#d4c4a0] border-2 border-[#8b6914]/40 shadow-inner flex items-center justify-center">
+                <UserAvatar
+                  key={`${avatarSrc}-${player.avatarSource ?? "default"}-${player.avatarNftTokenId ?? ""}`}
+                  src={avatarSrc}
+                  alt="My Chomper"
+                  size={96}
+                  className="object-contain p-1 max-h-[90%] w-auto h-auto"
+                />
+              </div>
+            </div>
 
-          <div className="text-center mb-5">
-            <h2 className="text-lg md:text-xl font-bold">{chomperLabel}</h2>
-            <p className="text-[var(--green)] text-xs md:text-sm flex items-center justify-center gap-1.5 mt-1 font-bold">
-              <StatusDot />
-              Actively Farming
-            </p>
-            <div className="mt-3 max-w-xs mx-auto">
+            {/* Character stats */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
+              <p className="text-[#4ade80] text-[9px] md:text-[10px] font-bold flex items-center gap-1">
+                <StatusDot />
+                Actively Farming
+              </p>
+              <h2 className="text-white text-xs md:text-base font-black leading-tight truncate">
+                {chomperLabel}
+              </h2>
+              <p className="text-[#4ade80] text-[10px] md:text-xs font-bold">{rarityLabel}</p>
+
+              <div className="sliced-stat-box p-1.5 md:p-2 mt-1">
+                <p className="text-[8px] md:text-[9px] font-black text-[#8b7355] uppercase mb-1 text-center">
+                  Your Multiplier Stat
+                </p>
+                <div className="space-y-0.5 text-[9px] md:text-[10px] font-bold">
+                  <div className="flex justify-between text-[#3d2516] gap-1">
+                    <span>Quantity Boost</span>
+                    <span className="text-[#15803d]">{formatPercent(economy.quantityBoost)}</span>
+                  </div>
+                  <div className="flex justify-between text-[#3d2516] gap-1">
+                    <span>Rarity Boost</span>
+                    <span className="text-[#15803d]">{formatPercent(economy.rarityBoost)}</span>
+                  </div>
+                  <div className="flex justify-between text-[#3d2516] gap-1">
+                    <span>Power Stat</span>
+                    <span className="text-[#15803d]">{economy.powerMultiplier.toFixed(2)}x</span>
+                  </div>
+                </div>
+              </div>
+
               <ProfileAvatarPicker
                 player={player}
                 onUpdated={(updated) => {
                   setPlayer(updated);
                   void refresh({ silent: true });
                 }}
+                triggerClassName="mt-1 text-[9px] text-[#8b7355] font-bold underline bg-transparent border-0 p-0 w-auto text-left hover:text-[#4ade80] transition-colors"
               />
             </div>
           </div>
+        </SlicedPanel>
 
-          <div>
-            <h3 className="stat-label mb-2 md:mb-3">Your Multipliers</h3>
-            <div className="space-y-1.5 md:space-y-2 text-xs md:text-sm font-medium mb-4 md:mb-5">
-              <div className="flex justify-between">
-                <span className="text-gray-300">Quantity Boost</span>
-                <span className="text-[var(--green)]">{formatPercent(economy.quantityBoost)}</span>
+        {/* Top-right: Active Skills */}
+        {activeSkills ? (
+          <ActiveSkillsPanel
+            initial={activeSkills}
+            onRefresh={() => refresh({ silent: true })}
+          />
+        ) : null}
+
+        {/* Bottom-left: Stat Upgrade */}
+        <SlicedPanel
+          src={SLICING.mainMenu.statEarningPanel}
+          title="Stat Upgrade"
+          padding="16% 10% 10% 10%"
+        >
+          <div className="space-y-2 md:space-y-3">
+            <div className="flex items-center gap-2">
+              <Image src={SLICING.mainMenu.power} alt="" width={32} height={32} className="w-7 h-7 md:w-8 md:h-8 shrink-0" unoptimized />
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-[10px] md:text-xs font-black">Power (Lvl {player.powerLvl})</p>
+                <p className="text-[#facc15] text-[9px] font-bold flex items-center gap-1">
+                  <Image src={SLICING.mainMenu.zCoin} alt="" width={12} height={12} className="w-3 h-3" unoptimized />
+                  Z Coin : {player.powerUpgradeCost}
+                </p>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-300">Rarity Boost</span>
-                <span className="text-[var(--green)]">{formatPercent(economy.rarityBoost)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-300">Power Stat</span>
-                <span className="text-[var(--blue)]">{economy.powerMultiplier.toFixed(2)}x</span>
-              </div>
+              <SlicedActionButton
+                src={SLICING.mainMenu.button}
+                onClick={() => handleUpgrade("power")}
+                disabled={upgrading !== null || player.powerLvl >= 100 || powerUpgrading}
+                className="h-7 md:h-8 min-w-[4rem] text-[10px]"
+              >
+                {upgrading === "power" ? <Spinner size="sm" /> : powerUpgrading ? "..." : "Upgrade"}
+              </SlicedActionButton>
             </div>
 
-            <div className="pt-4 border-t border-gray-700/50">
-              <h3 className="stat-label mb-2 md:mb-3">Stat Upgrades</h3>
-              <div className="flex flex-col gap-2 md:gap-3">
-                <div className="bg-dark-card p-2 md:p-3 rounded-lg flex flex-col gap-2.5">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2 md:gap-3">
-                      <BoltIcon className={`w-6 h-6 shrink-0 ${powerUpgrading ? "animate-pulse text-[var(--gold)]" : "text-[var(--gold)]"}`} />
-                      <div>
-                        <div className="font-bold text-xs md:text-sm text-gray-200">
-                          Power (Lvl {player.powerLvl})
-                        </div>
-                        {powerUpgrading ? (
-                          <div className="text-[10px] md:text-xs text-[var(--gold)] font-medium mt-0.5">
-                            Upgrading to Lvl {player.powerLvl + 1}...
-                          </div>
-                        ) : (
-                          <div className="text-[10px] md:text-xs text-[var(--gold)] flex items-center gap-1 mt-0.5 font-bold">
-                            <CoinIcon className="w-3 h-3" />
-                            {player.powerUpgradeCost} Z-Coins
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleUpgrade("power")}
-                      disabled={upgrading !== null || player.powerLvl >= 100 || powerUpgrading}
-                      className={`text-[10px] md:text-xs font-bold py-1.5 px-2 md:px-3 rounded flex items-center gap-1 ${
-                        powerUpgrading
-                          ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                          : "btn-secondary disabled:opacity-50"
-                      }`}
-                    >
-                      {upgrading === "power" ? (
-                        <Spinner size="sm" />
-                      ) : powerUpgrading ? (
-                        "Upgrading"
-                      ) : (
-                        "Upgrade"
-                      )}
-                    </button>
-                  </div>
-                  {powerUpgrading && (
-                    <div className="game-inset rounded flex justify-between items-center p-1.5 md:p-2">
-                      <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                        Time Remaining
-                      </span>
-                      <span className="text-[10px] md:text-xs font-mono font-bold text-[var(--gold)]">
-                        {formatDuration(powerRemaining)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="bg-dark-card p-2 md:p-3 rounded-lg flex flex-col gap-2.5">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2 md:gap-3">
-                      <SpeedIcon className={`w-6 h-6 shrink-0 ${speedUpgrading ? "animate-pulse text-[var(--blue)]" : "text-gray-300"}`} />
-                      <div>
-                        <div className="font-bold text-xs md:text-sm text-gray-200">
-                          Speed (Lvl {player.speedLvl})
-                        </div>
-                        {speedUpgrading ? (
-                          <div className="text-[10px] md:text-xs text-[var(--blue)] font-medium mt-0.5">
-                            Upgrading to Lvl {player.speedLvl + 1}...
-                          </div>
-                        ) : (
-                          <div className="text-[10px] md:text-xs text-[var(--gold)] flex items-center gap-1 mt-0.5 font-bold">
-                            <CoinIcon className="w-3 h-3" />
-                            {player.speedUpgradeCost} Z-Coins
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleUpgrade("speed")}
-                      disabled={upgrading !== null || player.speedLvl >= 100 || speedUpgrading}
-                      className={`text-[10px] md:text-xs font-bold py-1.5 px-2 md:px-3 rounded flex items-center gap-1 ${
-                        speedUpgrading
-                          ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                          : "btn-secondary disabled:opacity-50"
-                      }`}
-                    >
-                      {upgrading === "speed" ? (
-                        <Spinner size="sm" />
-                      ) : speedUpgrading ? (
-                        "Upgrading"
-                      ) : (
-                        "Upgrade"
-                      )}
-                    </button>
-                  </div>
-
-                  {speedUpgrading && (
-                    <div className="game-inset rounded flex justify-between items-center p-1.5 md:p-2">
-                      <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                        Time Remaining
-                      </span>
-                      <span className="text-[10px] md:text-xs font-mono font-bold text-[var(--blue)]">
-                        {formatDuration(speedRemaining)}
-                      </span>
-                    </div>
-                  )}
-                </div>
+            <div className="flex items-center gap-2">
+              <Image src={SLICING.mainMenu.speed} alt="" width={32} height={32} className="w-7 h-7 md:w-8 md:h-8 shrink-0" unoptimized />
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-[10px] md:text-xs font-black">Speed (Lvl {player.speedLvl})</p>
+                <p className="text-[#facc15] text-[9px] font-bold flex items-center gap-1">
+                  <Image src={SLICING.mainMenu.zCoin} alt="" width={12} height={12} className="w-3 h-3" unoptimized />
+                  Z Coin : {player.speedUpgradeCost}
+                </p>
               </div>
+              <SlicedActionButton
+                src={SLICING.mainMenu.button}
+                onClick={() => handleUpgrade("speed")}
+                disabled={upgrading !== null || player.speedLvl >= 100 || speedUpgrading}
+                className="h-7 md:h-8 min-w-[4rem] text-[10px]"
+              >
+                {upgrading === "speed" ? <Spinner size="sm" /> : speedUpgrading ? "..." : "Upgrade"}
+              </SlicedActionButton>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="card flex flex-col gap-3 md:gap-4">
-            <h3 className="stat-label mb-0.5">Wallet & Earnings</h3>
-
-            <div className="flex justify-between items-center gap-2">
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                  <CoinIcon className="w-5 h-5 text-[var(--gold)] shrink-0" />
-                  <span className="text-lg md:text-xl font-bold text-[var(--gold)] leading-none">
-                    {formatCoins(player.zCoins)}
-                  </span>
-                  <span className="text-gray-300 font-medium text-xs md:text-sm">Z-Coins</span>
-                </div>
-                <div className="flex items-center gap-1 ml-6 text-[10px] md:text-xs flex-wrap">
-                  <span className="font-bold text-[var(--green)]">
-                    +{formatCoins(economy.dailyRate)}/Day
-                  </span>
-                  <span className="text-gray-400 truncate">
-                    (Pen: {formatCoins(livePendingZ)})
-                  </span>
-                </div>
+          {(powerUpgrading || speedUpgrading) && (
+            <div className="relative mt-2">
+              <Image src={SLICING.mainMenu.timePanel} alt="" width={300} height={28} className="w-full h-7 object-fill" unoptimized />
+              <div className="absolute inset-0 flex items-center justify-between px-2 text-[9px] font-black text-white">
+                <span>Remaining Time</span>
+                <span className="tabular-nums">{formatDuration(upgradeRemaining)}</span>
               </div>
-              <button
-                type="button"
+            </div>
+          )}
+        </SlicedPanel>
+
+        {/* Bottom-right: Wallet & Earning */}
+        <SlicedPanel
+          src={SLICING.mainMenu.earningPanel}
+          title="Wallet & Earning"
+          padding="16% 10% 10% 10%"
+        >
+          <SlicedCoinRow
+            variant="zcoin"
+            balance={player.zCoins}
+            rate={economy.dailyRate}
+            pending={livePendingZ}
+            action={
+              <SlicedActionButton
+                src={SLICING.mainMenu.button}
                 onClick={handleClaimZ}
                 disabled={claimingZ || !canClaimZ}
-                className="btn-primary py-2 px-3 text-[10px] md:text-sm shrink-0 disabled:opacity-50"
+                className="h-7 md:h-8 min-w-[3.5rem] text-[10px]"
               >
-                {claimingZ ? <Spinner size="sm" /> : <ClaimArrowIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />}
-                Claim
-              </button>
-            </div>
-
-            <div className="w-full h-px bg-gray-700/50" />
-
-            <div className="flex justify-between items-center gap-2">
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                  <CoinIcon className="w-5 h-5 text-gray-300 shrink-0" />
-                  <span className="text-lg md:text-xl font-bold text-gray-200 leading-none">
-                    {formatCoins(player.coins ?? 0)}
-                  </span>
-                  <span className="text-gray-300 font-medium text-xs md:text-sm">Coins</span>
-                </div>
-                <div className="flex items-center gap-1 ml-6 text-[10px] md:text-xs flex-wrap">
-                  <span className="font-bold text-[var(--green)]">
-                    +{formatCoins(coinsDailyRate)}/Day
-                  </span>
-                  <span className="text-gray-400 truncate">
-                    (Pen: {formatCoins(livePendingCoins)})
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
+                {claimingZ ? <Spinner size="sm" /> : "Claim"}
+              </SlicedActionButton>
+            }
+          />
+          <div className="h-px bg-white/10 my-0.5" />
+          <SlicedCoinRow
+            variant="coin"
+            balance={player.coins ?? 0}
+            rate={coinsDailyRate}
+            pending={livePendingCoins}
+            action={
+              <SlicedActionButton
+                src={SLICING.mainMenu.button}
                 onClick={handleClaimCoins}
                 disabled={claimingCoins || !canClaimCoins}
-                className="btn-primary py-2 px-3 text-[10px] md:text-sm shrink-0 disabled:opacity-50"
+                className="h-7 md:h-8 min-w-[3.5rem] text-[10px]"
               >
-                {claimingCoins ? (
-                  <Spinner size="sm" />
-                ) : (
-                  <ClaimArrowIcon className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                )}
-                Claim
-              </button>
-            </div>
-          </div>
+                {claimingCoins ? <Spinner size="sm" /> : "Claim"}
+              </SlicedActionButton>
+            }
+          />
 
-          {activeSkills && (
-            <ActiveSkillsPanel
-              initial={activeSkills}
-              onRefresh={() => refresh({ silent: true })}
+          <div className="mt-3 flex justify-center w-full">
+            <WalletConnect
+              walletAddress={player.walletAddress}
+              nftCount={player.nftCount}
+              onLinked={() => refresh({ silent: true })}
+              compact
             />
-          )}
-        </div>
+          </div>
+        </SlicedPanel>
       </div>
+    </SlicedPage>
   );
 }

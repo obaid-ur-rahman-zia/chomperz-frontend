@@ -1,16 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import { ProfileSkeleton } from "@/components/Loading";
 import { NftGallery } from "@/components/NftGallery";
 import { UserAvatar } from "@/components/UserAvatar";
 import { usePlayer } from "@/hooks/usePlayer";
+import { SlicedPage, SlicedPanel, SlicedActionButton } from "@/components/sliced";
+import { SLICING } from "@/lib/slicing-paths";
 import {
   BoltIcon,
-  CoinIcon,
   LogoutIcon,
   ProfileIcon,
   SpeedIcon,
-  TrendIcon,
 } from "@/components/Icons";
 import { apiFetch, clearToken, formatCoins, formatPercent } from "@/lib/api";
 import { getChomperLabelFromPlayer } from "@/lib/chomper";
@@ -37,56 +38,47 @@ function ProfileContent() {
   const avatar = player.displayAvatarUrl || "/images/chomper.jpg";
 
   return (
-    <>
-      <h2 className="text-lg md:text-xl font-bold mb-4 flex items-center gap-2">
-        <ProfileIcon className="w-6 h-6 text-[var(--blue)] shrink-0" />
-        Profile
-      </h2>
-
-      <div className="card text-center mb-4">
-        <div className="relative w-24 h-24 mx-auto mb-4 rounded-2xl overflow-hidden border-4 border-[var(--green)]">
-          <UserAvatar key={avatar} src={avatar} alt="Profile" />
+    <SlicedPage>
+      <SlicedPanel src={SLICING.mainMenu.characterPanel} padding="1.25rem 1rem 1rem" className="mb-4">
+        <div className="text-center">
+          <div className="relative w-20 h-20 mx-auto mb-3 sliced-wood-inset rounded-lg overflow-hidden">
+            <UserAvatar key={avatar} src={avatar} alt="Profile" className="object-contain" />
+          </div>
+          <h2 className="sliced-title text-lg font-black text-white flex items-center justify-center gap-2">
+            <ProfileIcon className="w-5 h-5 text-[#38bdf8]" />
+            {player.twitterHandle}
+          </h2>
+          <p className="text-sm text-[#c4b5a0] font-bold mt-1">{chomperLabel}</p>
+          <SlicedActionButton
+            src={SLICING.mainMenu.button}
+            onClick={handleLogout}
+            className="mt-4 h-9 min-w-[6rem] mx-auto"
+          >
+            <span className="flex items-center gap-1">
+              <LogoutIcon className="w-4 h-4" />
+              Logout
+            </span>
+          </SlicedActionButton>
         </div>
-        <h2 className="text-xl font-black">{player.twitterHandle}</h2>
-        <p className="text-sm text-[var(--muted)] font-bold mt-1">{chomperLabel}</p>
-        <button
-          onClick={handleLogout}
-          className="btn-danger inline-flex mt-4 text-sm"
-        >
-          <LogoutIcon className="w-4 h-4" />
-          Logout
-        </button>
-      </div>
+      </SlicedPanel>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="card">
-          <p className="stat-label">Z-Coins</p>
-          <p className="font-black text-[var(--gold)] flex items-center gap-1 text-lg">
-            <CoinIcon className="w-5 h-5" />
-            {formatCoins(player.zCoins)}
-          </p>
-        </div>
-        <div className="card">
-          <p className="stat-label">Coins</p>
-          <p className="font-black text-[var(--blue)] text-lg">
-            {formatCoins(player.coins ?? 0)}
-          </p>
-        </div>
-        <div className="card">
-          <p className="stat-label">Daily Rate</p>
-          <p className="font-black text-[var(--green)] flex items-center gap-1 text-lg">
-            <TrendIcon className="w-5 h-5" />
-            +{formatCoins(economy.dailyRate)}
-          </p>
-        </div>
-        <div className="card">
-          <p className="stat-label">NFTs</p>
-          <p className="font-black text-xl">{player.nftCount}</p>
-        </div>
-        <div className="card">
-          <p className="stat-label">Multiplier</p>
-          <p className="font-black text-xl">{player.multiplier.toFixed(2)}x</p>
-        </div>
+        {[
+          { label: "Z-Coins", value: formatCoins(player.zCoins), color: "text-[#facc15]", icon: SLICING.mainMenu.zCoin },
+          { label: "Coins", value: formatCoins(player.coins ?? 0), color: "text-white", icon: SLICING.mainMenu.simpleCoin },
+          { label: "Daily Rate", value: `+${formatCoins(economy.dailyRate)}`, color: "text-[#4ade80]", icon: null },
+          { label: "NFTs", value: String(player.nftCount), color: "text-white", icon: null },
+        ].map((stat) => (
+          <SlicedPanel key={stat.label} src={SLICING.inventory.innerPanel} padding="0.75rem 1rem">
+            <p className="text-[9px] font-black text-[#c4b5a0] uppercase">{stat.label}</p>
+            <p className={`font-black text-lg flex items-center gap-1 ${stat.color}`}>
+              {stat.icon ? (
+                <Image src={stat.icon} alt="" width={18} height={18} className="w-4 h-4" unoptimized />
+              ) : null}
+              {stat.value}
+            </p>
+          </SlicedPanel>
+        ))}
       </div>
 
       <NftGallery
@@ -95,48 +87,36 @@ function ProfileContent() {
         walletLinked={Boolean(player.walletAddress)}
       />
 
-      <div className="card mb-4 space-y-2 text-sm font-bold">
-        <div className="flex justify-between">
-          <span className="text-[var(--muted)]">Quantity Boost</span>
-          <span className="text-[var(--green)]">{formatPercent(economy.quantityBoost)}</span>
+      <SlicedPanel src={SLICING.mainMenu.statEarningPanel} title="Stats" className="mt-4" padding="1.5rem 1.25rem 1rem">
+        <div className="space-y-2 text-sm font-bold text-white">
+          <div className="flex justify-between">
+            <span className="text-[#c4b5a0]">Quantity Boost</span>
+            <span className="text-[#4ade80]">{formatPercent(economy.quantityBoost)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#c4b5a0]">Rarity Boost</span>
+            <span className="text-[#4ade80]">{formatPercent(economy.rarityBoost)}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[#c4b5a0] flex items-center gap-1">
+              <BoltIcon className="w-4 h-4 text-[#facc15]" />
+              Power Lvl
+            </span>
+            <span>{player.powerLvl}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[#c4b5a0] flex items-center gap-1">
+              <SpeedIcon className="w-4 h-4" />
+              Speed Lvl
+            </span>
+            <span>{player.speedLvl}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#c4b5a0]">Multiplier</span>
+            <span>{player.multiplier.toFixed(2)}x</span>
+          </div>
         </div>
-        <div className="flex justify-between">
-          <span className="text-[var(--muted)]">Rarity Boost</span>
-          <span className="text-[var(--green)]">{formatPercent(economy.rarityBoost)}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-[var(--muted)] flex items-center gap-1">
-            <BoltIcon className="w-4 h-4 text-[var(--gold)]" />
-            Power Lvl
-          </span>
-          <span>{player.powerLvl}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-[var(--muted)] flex items-center gap-1">
-            <SpeedIcon className="w-4 h-4" />
-            Speed Lvl
-          </span>
-          <span>{player.speedLvl}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-[var(--muted)]">Pending Z</span>
-          <span className="text-[var(--gold)]">
-            {formatCoins(economy.pendingEarnings)} Z
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-[var(--muted)]">Pending Coins</span>
-          <span className="text-[var(--blue)]">
-            {formatCoins(economy.pendingCoins ?? 0)}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-[var(--muted)]">Coins / Day</span>
-          <span className="text-[var(--green)]">
-            +{formatCoins(economy.coinsDailyRate ?? 5)}
-          </span>
-        </div>
-      </div>
-    </>
+      </SlicedPanel>
+    </SlicedPage>
   );
 }

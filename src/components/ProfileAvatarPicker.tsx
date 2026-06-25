@@ -14,6 +14,7 @@ type AvatarSource = "default" | "twitter" | "nft";
 interface ProfileAvatarPickerProps {
   player: PlayerData;
   onUpdated: (player: PlayerData) => void;
+  triggerClassName?: string;
 }
 
 function nftImage(nft: OwnedNft): string {
@@ -26,7 +27,11 @@ function resolvePendingSource(player: PlayerData): AvatarSource {
   return "default";
 }
 
-export function ProfileAvatarPicker({ player, onUpdated }: ProfileAvatarPickerProps) {
+export function ProfileAvatarPicker({
+  player,
+  onUpdated,
+  triggerClassName,
+}: ProfileAvatarPickerProps) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -79,7 +84,10 @@ export function ProfileAvatarPicker({ player, onUpdated }: ProfileAvatarPickerPr
           setPendingTokenId(player.avatarNftTokenId ?? null);
           setOpen(true);
         }}
-        className="btn-secondary w-full text-xs py-2 min-h-0"
+        className={
+          triggerClassName ??
+          "btn-secondary w-full text-xs py-2 min-h-0"
+        }
       >
         Change Profile
       </button>
@@ -115,7 +123,7 @@ export function ProfileAvatarPicker({ player, onUpdated }: ProfileAvatarPickerPr
               }`}
             >
               <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-[var(--green)] shrink-0 bg-[#c9d0b6]">
-                <UserAvatar src={DEFAULT_CHOMPER} alt="Default Chomper" className="object-contain p-1" />
+                <UserAvatar src={DEFAULT_CHOMPER} alt="Default Chomper" size={48} className="object-contain p-1" />
               </div>
               <div className="text-left">
                 <p className="text-sm font-black">Default Chomper</p>
@@ -139,6 +147,7 @@ export function ProfileAvatarPicker({ player, onUpdated }: ProfileAvatarPickerPr
                 <UserAvatar
                   src={player.profilePicUrl || DEFAULT_CHOMPER}
                   alt="Twitter profile"
+                  size={48}
                 />
               </div>
               <div className="text-left">
@@ -163,10 +172,11 @@ export function ProfileAvatarPicker({ player, onUpdated }: ProfileAvatarPickerPr
                         selected ? "border-[var(--green)]" : "border-gray-700"
                       }`}
                     >
-                      <div className="relative aspect-square rounded-lg overflow-hidden bg-[#c9d0b6]">
+                      <div className="relative aspect-square rounded-lg overflow-hidden bg-[#c9d0b6] flex items-center justify-center">
                         <UserAvatar
                           src={nftImage(nft)}
                           alt={`NFT #${nft.tokenId}`}
+                          size={64}
                           className="object-contain p-1"
                         />
                       </div>

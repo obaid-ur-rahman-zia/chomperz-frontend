@@ -6,27 +6,22 @@ import {
   useMemo,
   useRef,
   useState,
-  type ComponentType,
 } from "react";
-import {
-  BoltIcon,
-  EditIcon,
-  ShopIcon,
-  SwordIcon,
-} from "@/components/Icons";
+import Link from "next/link";
+import Image from "next/image";
+import { StatusDot } from "@/components/Icons";
 import {
   apiFetch,
   type ActiveSkillsState,
 } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { Spinner } from "@/components/Loading";
-
-const SKILL_ICONS: Record<string, ComponentType<{ className?: string }>> = {
-  woodcutting: SwordIcon,
-  mining: BoltIcon,
-  carpentry: EditIcon,
-  smithing: ShopIcon,
-};
+import {
+  SlicedPanel,
+  SlicedActionButton,
+  SlicedProgressBar,
+} from "@/components/sliced";
+import { SLICING, SKILL_ICONS } from "@/lib/slicing-paths";
 
 interface ActiveSkillsPanelProps {
   initial: ActiveSkillsState;
@@ -169,134 +164,128 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
   const isRunning = skills.action.state === "running";
   const needsInput = (selected.inputQuantity ?? 0) > 0;
   const hasInput = !needsInput || (selected.inputQty ?? 0) >= (selected.inputQuantity ?? 0);
+  const progress = runningDisplay?.progressPct ?? skills.action.progressPct ?? 0;
+  const secondsRemaining = runningDisplay?.secondsRemaining ?? skills.action.secondsRemaining;
 
   return (
-    <div className="card flex flex-col gap-3 md:gap-4">
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="stat-label mb-0.5">Active Skills</h3>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 md:gap-3">
+    <SlicedPanel
+      src={SLICING.mainMenu.activeSkillPanel}
+      title="Active Skills"
+      padding="14% 8% 8% 8%"
+    >
+      <div className="grid grid-cols-4 gap-1.5 md:gap-2 mb-2">
         {skills.skills.map((skill) => {
-          const Icon = SKILL_ICONS[skill.id] ?? BoltIcon;
           const active = skills.selectedSkill === skill.id;
+          const iconSrc = SKILL_ICONS[skill.id] ?? SLICING.assets.mining;
           return (
             <button
               key={skill.id}
               type="button"
               onClick={() => handleSelect(skill.id)}
               disabled={busy !== null}
-              className={`bg-dark-card rounded-xl p-2.5 md:p-3 flex flex-col items-center justify-center gap-1.5 transition border ${
-                active
-                  ? "border-[var(--green)] shadow-[0_0_8px_rgba(34,197,94,0.15)]"
-                  : "border-gray-800 opacity-60 hover:opacity-100 hover:border-gray-600"
-              } disabled:opacity-50`}
+              className="relative aspect-square disabled:opacity-50 transition-transform active:scale-95"
             >
-              <div className="w-10 h-10 md:w-12 md:h-12 game-inset rounded-xl flex items-center justify-center">
-                <Icon className="w-6 h-6 text-gray-300" />
+              <Image
+                src={active ? SLICING.mainMenu.skillImageBgSelected : SLICING.mainMenu.skillImageBg}
+                alt=""
+                fill
+                className="object-fill"
+                unoptimized
+              />
+              <div className="absolute inset-1 flex flex-col items-center justify-center">
+                <Image
+                  src={iconSrc}
+                  alt={skill.label}
+                  width={32}
+                  height={32}
+                  className="w-6 h-6 md:w-8 md:h-8 object-contain"
+                  unoptimized
+                />
               </div>
-              <span
-                className={`text-xs md:text-sm font-bold ${active ? "text-[var(--green)]" : "text-gray-300"}`}
-              >
-                {skill.label}
-              </span>
-              <span className="text-[9px] text-gray-500 font-bold">Lvl {skill.level}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="flex justify-between items-center bg-dark-card p-2.5 md:p-3 rounded-lg border border-gray-800">
-        <div className="font-bold text-gray-300 text-xs md:text-sm">
-          Lvl: <span className="text-[var(--green)] text-sm md:text-base">{selected.level}</span>
-        </div>
-        <div className="text-[10px] md:text-xs text-gray-400 font-bold">
-          XP {selected.xp} / {selected.xpToNext}
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <span className="text-white text-xs md:text-sm font-black">
+          Lvl : <span className="text-[#4ade80]">{selected.level}</span>
+        </span>
+        <Link href="/skills" className="no-underline">
+          <SlicedActionButton src={SLICING.mainMenu.button} className="h-7 md:h-8 min-w-[4.5rem]">
+            Upgrade
+          </SlicedActionButton>
+        </Link>
+      </div>
+
+      <div
+        className="relative mb-2 rounded overflow-hidden"
+        style={{ backgroundImage: `url("${SLICING.mainMenu.levelActionReward}")`, backgroundSize: "100% 100%" }}
+      >
+        <div className="px-2 py-1.5">
+          <p className="text-[9px] md:text-[10px] font-black text-[#c4b5a0] uppercase mb-1">Action Reward</p>
+          <div className="grid grid-cols-2 gap-1 text-[10px] md:text-xs font-bold">
+            <div className="flex justify-between text-white px-1">
+              <span>{selected.rewardItemLabel}</span>
+              <span className="text-[#4ade80]">{selected.successPct}%</span>
+            </div>
+            <div className="flex justify-between text-white px-1">
+              <span>Fail</span>
+              <span className="text-red-400">{selected.failPct}%</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="bg-dark-card p-2.5 md:p-3 rounded-lg border border-gray-800 flex flex-col gap-1.5 md:gap-2">
-        <div className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-          Action Rewards
-        </div>
-        <p className="text-[10px] text-gray-500 font-bold">
-          Action time: {selected.actionDurationSec ?? selected.actionDurationMs! / 1000}s · runs continuously
-        </p>
-        <div className="grid grid-cols-2 gap-1.5 md:gap-2">
-          <div className="bg-black/40 border border-green-900/50 rounded flex justify-between items-center px-2 py-1 md:px-2.5 md:py-1.5">
-            <span className="text-[10px] md:text-xs text-gray-300">{selected.rewardItemLabel}</span>
-            <span className="text-[10px] md:text-xs font-bold text-[var(--green)]">
-              {selected.successPct}%
-            </span>
-          </div>
-          <div className="bg-black/40 border border-red-900/50 rounded flex justify-between items-center px-2 py-1 md:px-2.5 md:py-1.5">
-            <span className="text-[10px] md:text-xs text-gray-300">Fail</span>
-            <span className="text-[10px] md:text-xs font-bold text-red-500">{selected.failPct}%</span>
-          </div>
-        </div>
-        {needsInput && (
-          <p className="text-[10px] text-gray-400 font-bold">
-            Requires {selected.inputQuantity} {selected.inputItemId} per action (have{" "}
-            {selected.inputQty ?? 0})
-          </p>
-        )}
-      </div>
+      {!isRunning ? (
+        <SlicedActionButton
+          src={SLICING.mainMenu.progressiveButton}
+          onClick={handleStart}
+          disabled={busy !== null || !hasInput}
+          className="w-full h-10 md:h-11 mb-2"
+        >
+          {busy === "start" ? <Spinner size="sm" /> : "Start Action"}
+        </SlicedActionButton>
+      ) : (
+        <SlicedActionButton
+          src={SLICING.mainMenu.button}
+          onClick={handleStop}
+          disabled={busy !== null}
+          className="w-full h-10 md:h-11 mb-2 opacity-90"
+        >
+          {busy === "stop" ? <Spinner size="sm" /> : "Stop Action"}
+        </SlicedActionButton>
+      )}
 
-      <div className="game-inset p-3 md:p-4 rounded-lg flex flex-col gap-3 md:gap-4">
-        {!isRunning ? (
-          <button
-            type="button"
-            onClick={handleStart}
-            disabled={busy !== null || !hasInput}
-            className="w-full btn-primary py-2.5 md:py-3 text-xs md:text-sm uppercase tracking-wide disabled:opacity-50 shadow-[0_0_10px_rgba(34,197,94,0.2)]"
-          >
-            {busy === "start" ? <Spinner size="sm" /> : "Start Action"}
-          </button>
-        ) : (
-          <>
-            {/* <p className="text-center text-xs font-bold text-[var(--green)]">
-              Running continuously — rewards apply automatically
-            </p> */}
-            <button
-              type="button"
-              onClick={handleStop}
-              disabled={busy !== null}
-              className="w-full btn-danger py-2.5 md:py-3 text-xs md:text-sm uppercase tracking-wide disabled:opacity-50"
-            >
-              {busy === "stop" ? <Spinner size="sm" /> : "Stop Action"}
-            </button>
-          </>
-        )}
-
-        <div className="flex justify-center items-center font-medium text-gray-400 text-[10px] md:text-xs gap-1.5">
-          <span>{selected.rewardItemLabel} in Inventory:</span>
-          <span className="text-gray-200 font-bold text-xs md:text-sm bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700">
-            {selected.inventoryQty}
+      <div className="relative mb-1">
+        <Image
+          src={SLICING.mainMenu.woodInventoryBar}
+          alt=""
+          width={400}
+          height={24}
+          className="w-full h-6 object-fill"
+          unoptimized
+        />
+        <div className="absolute inset-0 flex items-center justify-between px-3 text-[9px] md:text-[10px] font-black text-white">
+          <span className="flex items-center gap-1">
+            {isRunning ? (
+              <>
+                <StatusDot />
+                Running
+              </>
+            ) : (
+              `${selected.rewardItemLabel} In Inventory`
+            )}
+          </span>
+          <span>
+            {isRunning ? `${secondsRemaining}s` : selected.inventoryQty}
           </span>
         </div>
-
-        {isRunning && (
-          <div className="pt-2 md:pt-3 border-t border-gray-800/80">
-            <div className="flex justify-between items-end mb-1.5 md:mb-2">
-              <div className="text-[var(--green)] text-[9px] md:text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-[var(--green)] rounded-full animate-pulse" />
-                Running
-              </div>
-              <div className="text-xs md:text-sm font-mono font-bold text-gray-400">
-                {(runningDisplay ?? skills.action).secondsRemaining}s
-              </div>
-            </div>
-            <div className="w-full game-progress-track rounded-full h-2 md:h-3 relative overflow-hidden">
-              <div
-                className="game-progress-fill h-full rounded-full relative overflow-hidden"
-                style={{ width: `${(runningDisplay ?? skills.action).progressPct}%` }}
-              >
-                <div className="absolute top-0 left-0 right-0 h-1 bg-white/20 rounded-full" />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-    </div>
+
+      {isRunning && (
+        <SlicedProgressBar progress={progress} className="mt-1" />
+      )}
+    </SlicedPanel>
   );
 }

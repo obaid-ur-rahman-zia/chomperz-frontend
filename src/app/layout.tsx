@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Nunito } from "next/font/google";
+import localFont from "next/font/local";
 import { AppToaster } from "@/components/AppToaster";
 import "./globals.css";
 
@@ -7,6 +8,12 @@ const nunito = Nunito({
   subsets: ["latin"],
   weight: ["400", "700", "800", "900"],
   variable: "--font-nunito",
+});
+
+const grobold = localFont({
+  src: "../../public/fonts/Grobold.ttf",
+  variable: "--font-grobold",
+  display: "swap",
 });
 
 const APP_NAME = "ChomperZ";
@@ -56,7 +63,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${nunito.variable} antialiased`}>
+      <body className={`${nunito.variable} ${grobold.variable} antialiased`}>
         {children}
         <AppToaster />
       </body>

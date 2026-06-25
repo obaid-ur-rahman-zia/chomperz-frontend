@@ -1,8 +1,7 @@
 "use client";
 
 import { ReactNode, useCallback } from "react";
-import { GameNavDesktop, GameNavMobile } from "@/components/GameNav";
-import { GameHeader } from "@/components/GameHeader";
+import { SlicedNavDesktop, SlicedNavMobile, SlicedHeader } from "@/components/sliced";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { usePlayerContext } from "@/context/PlayerContext";
 
@@ -15,15 +14,15 @@ export function GameShellInner({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   return (
-    <div className="min-h-[100dvh] md:p-8 flex justify-center items-start">
-      <div className="bg-panel w-full max-w-5xl md:rounded-2xl p-4 md:p-8 pb-24 lg:pb-8 md:shadow-2xl border border-black/60 md:border-gray-800/80 min-h-[100dvh] md:min-h-fit overflow-x-hidden">
+    <div className="sliced-game-shell flex justify-center items-start">
+      <div className="sliced-game-inner w-full overflow-x-hidden">
         <PullToRefresh onRefresh={handleRefresh}>
-          <GameHeader />
-          <GameNavDesktop />
+          <SlicedHeader />
+          <SlicedNavDesktop />
           {children}
         </PullToRefresh>
       </div>
-      <GameNavMobile />
+      <SlicedNavMobile />
     </div>
   );
 }

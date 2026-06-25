@@ -99,7 +99,7 @@ function LoginContent() {
 
         <SlicedPanel
           src={SLICING.mainMenu.characterPanel}
-          padding="14% 12% 12% 12%"
+          padding="20% 12% 12% 12%"
           className="aspect-[4/5] sm:aspect-[5/6] max-h-[34rem]"
         >
           <div className="flex flex-col items-center h-full text-center">

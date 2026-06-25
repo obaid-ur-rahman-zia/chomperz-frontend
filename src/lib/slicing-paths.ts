@@ -48,10 +48,10 @@ export const SLICING = {
   },
   /** Content insets — titles are baked into panel PNGs */
   dashboardInsets: {
-    character: "14% 10% 12% 10%",
-    activeSkills: "15% 8% 7% 8%",
-    statUpgrade: "15% 9% 9% 9%",
-    wallet: "15% 9% 9% 9%",
+    character: "9% 8% 9% 8%",
+    activeSkills: "10% 8% 8% 8%",
+    statUpgrade: "10% 8% 8% 8%",
+    wallet: "10% 8% 8% 8%",
   },
   mapInsets: {
     detail: "14% 10% 10% 10%",

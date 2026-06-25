@@ -259,7 +259,7 @@ export function WalletConnect({
         type="button"
         onClick={() => setShowConnectOptions(true)}
         disabled={loading !== null}
-        className="relative w-full h-10 md:h-11 disabled:opacity-50 transition-transform active:scale-[0.98]"
+        className="relative w-full h-9 md:h-10 disabled:opacity-50 transition-transform active:scale-[0.98]"
       >
         <Image
           src={SLICING.mainMenu.connectWallet}

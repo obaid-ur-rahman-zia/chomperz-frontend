@@ -48,17 +48,17 @@ export function DashboardCharacterPanel({
     <SlicedPanel
       src={SLICING.mainMenu.characterPanel}
       padding={SLICING.dashboardInsets.character}
-      className="aspect-[5/3] md:aspect-[2.15/1] min-h-0"
+      fit="content"
     >
-      <div className="flex h-full items-stretch gap-2 sm:gap-3 min-h-0 overflow-hidden">
-        <div className="relative flex-[0_0_46%] sm:flex-[0_0_44%] md:flex-[0_0_42%] min-w-0 h-full shrink-0">
+      <div className="flex items-stretch gap-2 sm:gap-2">
+        <div className="relative flex-[0_0_42%] min-w-0 shrink-0 h-[8.25rem] sm:h-[9rem] md:h-[10rem]">
           <button
             type="button"
             onClick={() => setPickerOpen(true)}
-            className="relative w-full h-full min-h-0 group"
+            className="relative w-full h-full group"
             aria-label="Change profile picture"
           >
-            <div className="relative w-full h-full min-h-0">
+            <div className="relative w-full h-full">
               <Image
                 src={SLICING.assets.chomperFront}
                 alt="Chomper"
@@ -79,8 +79,8 @@ export function DashboardCharacterPanel({
           />
         </div>
 
-        <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5 sm:gap-1 overflow-hidden py-0.5">
-          <p className="text-[#76B852] text-[10px] md:text-[11px] font-bold flex items-center gap-1.5">
+        <div className="flex-1 min-w-0 flex flex-col justify-start gap-0 sm:gap-0.5 pt-0.5">
+          <p className="text-[#76B852] text-[10px] md:text-[11px] font-bold flex items-center gap-1.5 shrink-0">
             <span
               className="inline-block w-2 h-2 rounded-full bg-[#76B852] shrink-0"
               aria-hidden
@@ -88,13 +88,13 @@ export function DashboardCharacterPanel({
             Actively Farming
           </p>
 
-          <h2 className="dashboard-character-name text-xl pl-0.5 sm:text-2xl md:text-[1.75rem] truncate">
+          <h2 className="dashboard-character-name text-lg sm:text-xl md:text-2xl shrink-0">
             {chomperLabel}
           </h2>
 
-          <p className="text-[#76B852] text-xs md:text-sm font-bold">{rarityLabel}</p>
+          <p className="text-[#76B852] text-xs md:text-sm font-bold shrink-0">{rarityLabel}</p>
 
-          <div className="dashboard-character-stat-box mt-1 p-1.5 md:p-2">
+          <div className="dashboard-character-stat-box mt-0.5 p-1.5 md:p-2 shrink-0">
             <p className="text-[10px] md:text-[11px] font-bold text-[#4a2f1a] mb-0.5">
               Your Multiplier Stat
             </p>

@@ -141,7 +141,7 @@ function DashboardContent() {
 
   return (
     <SlicedPage>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-2 auto-rows-fr">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 md:gap-2 lg:auto-rows-fr isolate">
         <DashboardCharacterPanel
           player={player}
           chomperLabel={chomperLabel}
@@ -158,16 +158,16 @@ function DashboardContent() {
             onRefresh={() => refresh({ silent: true })}
           />
         ) : (
-          <div className="min-h-[11rem] md:min-h-[13rem]" />
+          <div className="min-h-0 md:min-h-[13rem]" />
         )}
 
         <SlicedPanel
           src={SLICING.mainMenu.statEarningPanel}
           padding={SLICING.dashboardInsets.statUpgrade}
-          className="aspect-[5/3] md:aspect-[2.15/1] min-h-0"
+          fit="content"
         >
-          <div className="flex flex-col justify-center gap-2 min-h-0">
-            <div className="space-y-2 md:space-y-2.5">
+          <div className="flex flex-col gap-1 md:gap-1.5">
+            <div className="space-y-1 md:space-y-1.5">
               <div className="flex items-center gap-2">
                 <Image
                   src={SLICING.mainMenu.power}
@@ -239,13 +239,13 @@ function DashboardContent() {
               </div>
             </div>
 
-            <div className="relative pt-1 shrink-0">
+            <div className="relative shrink-0">
               <Image
                 src={SLICING.mainMenu.timePanel}
                 alt=""
                 width={300}
                 height={28}
-                className="w-full h-7 object-fill"
+                className="w-full h-6 md:h-7 object-fill"
                 unoptimized
               />
               <div className="absolute inset-0 flex items-center justify-between px-3 text-[9px] md:text-[10px] font-black text-white">
@@ -266,9 +266,9 @@ function DashboardContent() {
         <SlicedPanel
           src={SLICING.mainMenu.statEarningPanel}
           padding={SLICING.dashboardInsets.wallet}
-          className="aspect-[5/3] md:aspect-[2.15/1] min-h-0"
+          fit="content"
         >
-          <div className="flex flex-col justify-center gap-1.5 min-h-0">
+          <div className="flex flex-col gap-1">
             <WalletEarningRow
               variant="zcoin"
               balance={player.zCoins}
@@ -288,7 +288,7 @@ function DashboardContent() {
               actionBusy={claimingCoins}
             />
 
-            <div className="pt-1 flex justify-center w-full shrink-0">
+            <div className="flex justify-center w-full shrink-0">
               <WalletConnect
                 walletAddress={player.walletAddress}
                 nftCount={player.nftCount}

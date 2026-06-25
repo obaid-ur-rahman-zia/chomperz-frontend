@@ -22,7 +22,7 @@ export function SlicedActionButton({
     <button
       type="button"
       disabled={disabled}
-      className={`relative inline-flex items-center justify-center min-w-[5rem] disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95 ${className}`}
+      className={`relative flex items-center justify-center min-w-[5rem] disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95 ${className}`}
       {...props}
     >
       <Image

@@ -153,10 +153,10 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
     <SlicedPanel
       src={SLICING.mainMenu.activeSkillPanel}
       padding={SLICING.dashboardInsets.activeSkills}
-      className="min-h-[11rem] md:min-h-[13rem]"
+      fit="content"
     >
-      <div className="flex flex-col h-full min-h-0">
-        <div className="grid grid-cols-4 gap-1 mb-1.5 shrink-0">
+      <div className="flex flex-col gap-1 md:gap-1.5">
+        <div className="grid grid-cols-4 gap-1 shrink-0 max-md:h-[4rem]">
           {skills.skills.map((skill) => {
             const active = skills.selectedSkill === skill.id;
             const iconSrc = SKILL_ICONS[skill.id] ?? SLICING.assets.mining;
@@ -166,7 +166,7 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
                 type="button"
                 onClick={() => handleSelect(skill.id)}
                 disabled={busy !== null}
-                className="relative aspect-square w-full disabled:opacity-50 active:scale-95 transition-transform"
+                className="relative h-full w-full disabled:opacity-50 active:scale-95 transition-transform"
               >
                 <Image
                   src={active ? SLICING.mainMenu.skillImageBgSelected : SLICING.mainMenu.skillImageBg}
@@ -183,7 +183,7 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
           })}
         </div>
 
-        <div className="flex items-center justify-between gap-2 mb-1.5 shrink-0">
+        <div className="flex items-center justify-between gap-2 shrink-0">
           <span className="text-white text-[10px] md:text-xs font-black drop-shadow">
             Lvl : <span className="text-[#4ade80]">{selected.level}</span>
           </span>
@@ -194,16 +194,16 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
           </Link>
         </div>
 
-        <div className="relative w-full mb-1.5 shrink-0 min-h-[2.75rem]">
+        <div className="relative w-full h-10 md:h-12 shrink-0">
           <Image
             src={SLICING.mainMenu.levelActionReward}
             alt=""
             width={400}
             height={48}
-            className="w-full h-full min-h-[2.75rem] object-fill"
+            className="w-full h-full object-fill"
             unoptimized
           />
-          <div className="absolute inset-0 flex flex-col justify-center px-2 py-1">
+          <div className="absolute inset-0 flex flex-col justify-center px-2 py-1 pointer-events-none">
             <p className="text-[8px] font-black text-[#c4b5a0] uppercase text-center mb-0.5">
               Action Reward
             </p>
@@ -220,13 +220,13 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
           </div>
         </div>
 
-        <div className="shrink-0 mb-1.5">
+        <div className="shrink-0">
           {!isRunning ? (
             <SlicedActionButton
               src={SLICING.mainMenu.progressiveButton}
               onClick={handleStart}
               disabled={busy !== null || !hasInput}
-              className="w-full h-9 md:h-10"
+              className="flex w-full h-8 md:h-10"
             >
               {busy === "start" ? <Spinner size="sm" /> : "Start Action"}
             </SlicedActionButton>
@@ -235,14 +235,14 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
               src={SLICING.mainMenu.progressiveButton}
               onClick={handleStop}
               disabled={busy !== null}
-              className="w-full h-9 md:h-10 opacity-90"
+              className="flex w-full h-8 md:h-10 opacity-90"
             >
               {busy === "stop" ? <Spinner size="sm" /> : "Stop Action"}
             </SlicedActionButton>
           )}
         </div>
 
-        <div className="mt-auto shrink-0 space-y-0.5">
+        <div className="shrink-0 space-y-1">
           <div className="relative w-full h-6">
             <Image
               src={SLICING.mainMenu.woodInventoryBar}
@@ -267,7 +267,7 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
               </span>
             </div>
           </div>
-          {isRunning && <SlicedProgressBar progress={progress} className="!mt-0" />}
+          {isRunning && <SlicedProgressBar progress={progress} />}
         </div>
       </div>
     </SlicedPanel>

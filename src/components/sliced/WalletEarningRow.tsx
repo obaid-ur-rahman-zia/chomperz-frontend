@@ -29,7 +29,7 @@ export function WalletEarningRow({
   const icon = variant === "zcoin" ? SLICING.mainMenu.zCoin : SLICING.mainMenu.simpleCoin;
 
   return (
-    <div className="flex items-center gap-2 py-1.5 min-h-[2.75rem]">
+    <div className="flex items-center gap-2 py-1 min-h-[2.5rem] md:min-h-[2.75rem]">
       <Image
         src={icon}
         alt=""

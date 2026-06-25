@@ -41,35 +41,25 @@ export function LoadingScreen({ label }: { label?: string }) {
 
 export function DashboardSkeletonInner() {
   return (
-    <div className="grid lg:grid-cols-2 gap-4 md:gap-6">
+    <div className="grid lg:grid-cols-2 gap-1.5 md:gap-2">
       <div className="skeleton-wrap">
-        <Skeleton className="w-32 md:w-full max-w-sm aspect-square mx-auto mb-4 rounded-xl" />
-        <Skeleton className="h-6 w-40 mx-auto mb-2" />
-        <Skeleton className="h-4 w-32 mx-auto mb-6" />
-        <Skeleton className="h-3 w-28 mb-3" />
-        <div className="space-y-3">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-16 w-full rounded-lg" />
-          <Skeleton className="h-16 w-full rounded-lg" />
-        </div>
+        <Skeleton className="w-full h-36 md:h-40 rounded-xl" />
       </div>
-      <div className="space-y-4">
-        <div className="skeleton-wrap space-y-3">
-          <Skeleton className="h-3 w-32" />
-          <Skeleton className="h-14 w-full" />
-          <Skeleton className="h-14 w-full" />
-        </div>
-        <div className="skeleton-wrap space-y-3">
-          <Skeleton className="h-3 w-24" />
-          <div className="grid grid-cols-2 gap-2">
-            <Skeleton className="h-24 rounded-xl" />
-            <Skeleton className="h-24 rounded-xl" />
-            <Skeleton className="h-24 rounded-xl" />
-            <Skeleton className="h-24 rounded-xl" />
-          </div>
-        </div>
-        <Skeleton className="h-12 w-full rounded-xl" />
+      <div className="skeleton-wrap space-y-2">
+        <Skeleton className="h-16 w-full rounded-lg" />
+        <Skeleton className="h-8 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <Skeleton className="h-8 w-full rounded-lg" />
+      </div>
+      <div className="skeleton-wrap space-y-2">
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <Skeleton className="h-7 w-full rounded-lg" />
+      </div>
+      <div className="skeleton-wrap space-y-2">
+        <Skeleton className="h-12 w-full rounded-lg" />
+        <Skeleton className="h-12 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-xl" />
       </div>
     </div>
   );

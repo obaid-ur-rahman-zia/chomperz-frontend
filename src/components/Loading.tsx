@@ -80,28 +80,22 @@ export function DashboardSkeleton() {
 export function ProfileSkeleton() {
   return (
     <>
-      <div className="skeleton-wrap text-center mb-4">
-        <Skeleton className="w-24 h-24 mx-auto mb-4 rounded-2xl" />
-        <Skeleton className="h-6 w-36 mx-auto mb-2" />
-        <Skeleton className="h-4 w-28 mx-auto mb-4" />
-        <Skeleton className="h-10 w-28 mx-auto rounded-xl" />
+      <div className="skeleton-wrap mb-4">
+        <Skeleton className="aspect-[5/3] md:aspect-[2.4/1] w-full rounded-xl" />
       </div>
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-2 md:gap-3 mb-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="skeleton-wrap space-y-2">
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-7 w-20" />
-          </div>
+          <Skeleton key={i} className="h-[4.5rem] w-full rounded-xl" />
         ))}
       </div>
       <div className="skeleton-wrap mb-4 space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-4 w-full" />
-        ))}
+        <Skeleton className="h-24 w-full rounded-xl" />
+      </div>
+      <div className="skeleton-wrap mb-4 space-y-3">
+        <Skeleton className="h-40 w-full rounded-xl" />
       </div>
       <div className="skeleton-wrap space-y-3">
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="h-12 w-full rounded-xl" />
+        <Skeleton className="h-48 w-full rounded-xl" />
       </div>
     </>
   );

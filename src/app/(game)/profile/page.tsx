@@ -1,27 +1,70 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { ProfileSkeleton } from "@/components/Loading";
 import { NftGallery } from "@/components/NftGallery";
+import { ProfileAvatarPicker } from "@/components/ProfileAvatarPicker";
 import { UserAvatar } from "@/components/UserAvatar";
+import { WalletConnect } from "@/components/WalletConnect";
 import { usePlayer } from "@/hooks/usePlayer";
 import { SlicedPage, SlicedPanel, SlicedActionButton } from "@/components/sliced";
 import { SLICING } from "@/lib/slicing-paths";
-import {
-  BoltIcon,
-  LogoutIcon,
-  ProfileIcon,
-  SpeedIcon,
-} from "@/components/Icons";
-import { apiFetch, clearToken, formatCoins, formatPercent } from "@/lib/api";
+import { LogoutIcon } from "@/components/Icons";
+import { apiFetch, clearToken, formatCoinsCompact, formatPercent } from "@/lib/api";
 import { getChomperLabelFromPlayer } from "@/lib/chomper";
+
+function StatCell({
+  label,
+  value,
+  icon,
+  valueClass = "text-white",
+}: {
+  label: string;
+  value: string;
+  icon?: string;
+  valueClass?: string;
+}) {
+  return (
+    <div className="profile-stat-cell p-2 md:p-2.5 min-h-[3.75rem] flex flex-col justify-center">
+      <p className="text-[9px] md:text-[10px] font-bold text-white/90 mb-0.5">{label}</p>
+      <p className={`font-black text-sm md:text-base flex items-center gap-1.5 tabular-nums truncate ${valueClass}`}>
+        {icon ? (
+          <Image src={icon} alt="" width={18} height={18} className="w-4 h-4 shrink-0" unoptimized />
+        ) : null}
+        <span className="truncate">{value}</span>
+      </p>
+    </div>
+  );
+}
+
+function MultiplierStatRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2 py-1.5 text-xs md:text-sm font-semibold text-white border-b border-white/20 last:border-b-0">
+      <span className="flex items-center gap-2 min-w-0">
+        {icon}
+        <span>{label}</span>
+      </span>
+      <span className="shrink-0 tabular-nums font-bold text-white">{value}</span>
+    </div>
+  );
+}
 
 export default function ProfilePage() {
   return <ProfileContent />;
 }
 
 function ProfileContent() {
-  const { player, loading } = usePlayer();
+  const { player, loading, refresh, setPlayer } = usePlayer();
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   async function handleLogout() {
     await apiFetch("/api/auth/logout", { method: "POST" }).catch(() => {});
@@ -30,91 +73,196 @@ function ProfileContent() {
   }
 
   if (loading || !player) {
-    return <ProfileSkeleton />;
+    return (
+      <SlicedPage>
+        <ProfileSkeleton />
+      </SlicedPage>
+    );
   }
 
   const { economy } = player;
   const chomperLabel = getChomperLabelFromPlayer(player);
   const avatar = player.displayAvatarUrl || "/images/chomper.jpg";
+  const handle = player.twitterHandle.startsWith("@")
+    ? player.twitterHandle
+    : `@${player.twitterHandle}`;
+
+  const rarityLabel =
+    player.nftCount === 0
+      ? "No NFT"
+      : economy.rarityBoost >= 0.12
+        ? "Rare+"
+        : economy.rarityBoost >= 0.05
+          ? "Uncommon"
+          : "Common";
+
+  const powerPct = formatPercent(Math.max(0, economy.powerMultiplier - 1));
 
   return (
-    <SlicedPage>
-      <SlicedPanel src={SLICING.mainMenu.characterPanel} padding="1.25rem 1rem 1rem" className="mb-4">
-        <div className="text-center">
-          <div className="relative w-20 h-20 mx-auto mb-3 sliced-wood-inset rounded-lg overflow-hidden">
-            <UserAvatar key={avatar} src={avatar} alt="Profile" className="object-contain" />
-          </div>
-          <h2 className="sliced-title text-lg font-black text-white flex items-center justify-center gap-2">
-            <ProfileIcon className="w-5 h-5 text-[#38bdf8]" />
-            {player.twitterHandle}
-          </h2>
-          <p className="text-sm text-[#c4b5a0] font-bold mt-1">{chomperLabel}</p>
-          <SlicedActionButton
-            src={SLICING.mainMenu.button}
-            onClick={handleLogout}
-            className="mt-4 h-9 min-w-[6rem] mx-auto"
+    <SlicedPage className="max-w-3xl mx-auto space-y-3 md:space-y-4">
+      <SlicedPanel
+        src={SLICING.mainMenu.characterPanel}
+        padding="14% 10% 12% 10%"
+        fit="content"
+      >
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            className="relative shrink-0 w-16 h-16 sm:w-20 sm:h-20 group"
+            aria-label="Change profile picture"
           >
-            <span className="flex items-center gap-1">
-              <LogoutIcon className="w-4 h-4" />
-              Logout
+            <Image
+              src={SLICING.navbar.profileImage}
+              alt=""
+              fill
+              className="object-fill pointer-events-none"
+              unoptimized
+            />
+            <span className="absolute inset-[10%] overflow-hidden rounded-sm block">
+              <UserAvatar key={avatar} src={avatar} alt="Profile" className="object-cover" />
             </span>
-          </SlicedActionButton>
+            <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/15 rounded-sm" />
+          </button>
+
+          <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5 sm:gap-1">
+            <p className="text-[#76B852] text-[10px] md:text-[11px] font-bold flex items-center gap-1.5">
+              <span className="inline-block w-2 h-2 rounded-full bg-[#76B852] shrink-0" aria-hidden />
+              Profile
+            </p>
+            <h1 className="dashboard-character-name text-base sm:text-lg md:text-xl truncate">{handle}</h1>
+            <p className="text-white text-[11px] md:text-xs font-bold truncate sliced-btn-text">{chomperLabel}</p>
+            <p className="text-[#76B852] text-[11px] md:text-xs font-bold">{rarityLabel}</p>
+
+            <div className="flex flex-wrap gap-1.5 mt-1">
+              <SlicedActionButton
+                src={SLICING.shop.unselectedButton}
+                onClick={() => setPickerOpen(true)}
+                className="h-7 sm:h-8 min-w-[6.5rem] text-[9px] sm:text-[10px]"
+              >
+                Change Profile
+              </SlicedActionButton>
+              <SlicedActionButton
+                src={SLICING.shop.unselectedButton}
+                onClick={handleLogout}
+                className="h-7 sm:h-8 min-w-[5rem] text-[9px] sm:text-[10px]"
+              >
+                <span className="flex items-center gap-1">
+                  <LogoutIcon className="w-3.5 h-3.5 text-[#fbbf24]" />
+                  Logout
+                </span>
+              </SlicedActionButton>
+            </div>
+          </div>
         </div>
       </SlicedPanel>
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        {[
-          { label: "Z-Coins", value: formatCoins(player.zCoins), color: "text-[#facc15]", icon: SLICING.mainMenu.zCoin },
-          { label: "Coins", value: formatCoins(player.coins ?? 0), color: "text-white", icon: SLICING.mainMenu.simpleCoin },
-          { label: "Daily Rate", value: `+${formatCoins(economy.dailyRate)}`, color: "text-[#4ade80]", icon: null },
-          { label: "NFTs", value: String(player.nftCount), color: "text-white", icon: null },
-        ].map((stat) => (
-          <SlicedPanel key={stat.label} src={SLICING.inventory.innerPanel} padding="0.75rem 1rem">
-            <p className="text-[9px] font-black text-[#c4b5a0] uppercase">{stat.label}</p>
-            <p className={`font-black text-lg flex items-center gap-1 ${stat.color}`}>
-              {stat.icon ? (
-                <Image src={stat.icon} alt="" width={18} height={18} className="w-4 h-4" unoptimized />
-              ) : null}
-              {stat.value}
-            </p>
-          </SlicedPanel>
-        ))}
-      </div>
-
-      <NftGallery
-        nfts={player.nfts ?? []}
-        collectionName={player.nftCollectionName}
-        walletLinked={Boolean(player.walletAddress)}
+      <ProfileAvatarPicker
+        player={player}
+        onUpdated={(updated) => {
+          setPlayer(updated);
+          void refresh({ silent: true });
+        }}
+        hideTrigger
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
       />
 
-      <SlicedPanel src={SLICING.mainMenu.statEarningPanel} title="Stats" className="mt-4" padding="1.5rem 1.25rem 1rem">
-        <div className="space-y-2 text-sm font-bold text-white">
-          <div className="flex justify-between">
-            <span className="text-[#c4b5a0]">Quantity Boost</span>
-            <span className="text-[#4ade80]">{formatPercent(economy.quantityBoost)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[#c4b5a0]">Rarity Boost</span>
-            <span className="text-[#4ade80]">{formatPercent(economy.rarityBoost)}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[#c4b5a0] flex items-center gap-1">
-              <BoltIcon className="w-4 h-4 text-[#facc15]" />
-              Power Lvl
-            </span>
-            <span>{player.powerLvl}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[#c4b5a0] flex items-center gap-1">
-              <SpeedIcon className="w-4 h-4" />
-              Speed Lvl
-            </span>
-            <span>{player.speedLvl}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[#c4b5a0]">Multiplier</span>
-            <span>{player.multiplier.toFixed(2)}x</span>
-          </div>
+      <SlicedPanel
+        src={SLICING.mainMenu.statEarningPanel}
+        padding="12% 9% 11% 9%"
+        fit="content"
+      >
+        <div className="grid grid-cols-2 gap-2 md:gap-2.5">
+          <StatCell
+            label="Z-Coins"
+            value={formatCoinsCompact(player.zCoins)}
+            icon={SLICING.mainMenu.zCoin}
+          />
+          <StatCell
+            label="Coins"
+            value={formatCoinsCompact(player.coins ?? 0)}
+            icon={SLICING.mainMenu.simpleCoin}
+          />
+          <StatCell
+            label="Daily Rate"
+            value={`+${formatCoinsCompact(economy.dailyRate)}`}
+            valueClass="text-[#4ade80]"
+          />
+          <StatCell label="NFTs" value={String(player.nftCount)} />
+        </div>
+      </SlicedPanel>
+
+      <SlicedPanel src={SLICING.mainMenu.statEarningPanel} padding="12% 9% 11% 9%" fit="content">
+        <h2 className="sliced-title text-center text-sm md:text-base font-black text-[#f5d76e] mb-3">
+          Wallet
+        </h2>
+        <div className="flex justify-center pb-1">
+          <WalletConnect
+            walletAddress={player.walletAddress}
+            nftCount={player.nftCount}
+            onLinked={() => refresh({ silent: true })}
+            variant="dashboard"
+          />
+        </div>
+      </SlicedPanel>
+
+      <SlicedPanel src={SLICING.mainMenu.statEarningPanel} padding="12% 9% 11% 9%" fit="content">
+        <NftGallery
+          nfts={player.nfts ?? []}
+          collectionName={player.nftCollectionName}
+          walletLinked={Boolean(player.walletAddress)}
+          onDarkPanel
+        />
+      </SlicedPanel>
+
+      <SlicedPanel src={SLICING.mainMenu.statEarningPanel} padding="12% 9% 11% 9%" fit="content">
+        <h2 className="sliced-title text-center text-sm md:text-base font-black text-[#f5d76e] mb-2">
+          Multiplier Stats
+        </h2>
+        <div className="profile-stat-cell p-2 md:p-3">
+          <MultiplierStatRow
+            icon={
+              <Image src={SLICING.assets.plank} alt="" width={18} height={18} className="w-4 h-4 object-contain shrink-0" unoptimized />
+            }
+            label="Quantity Boost"
+            value={formatPercent(economy.quantityBoost)}
+          />
+          <MultiplierStatRow
+            icon={
+              <Image src={SLICING.assets.ore} alt="" width={18} height={18} className="w-4 h-4 object-contain shrink-0" unoptimized />
+            }
+            label="Rarity Boost"
+            value={formatPercent(economy.rarityBoost)}
+          />
+          <MultiplierStatRow
+            icon={
+              <Image src={SLICING.mainMenu.power} alt="" width={18} height={18} className="w-4 h-4 object-contain shrink-0" unoptimized />
+            }
+            label="Power Stat"
+            value={powerPct}
+          />
+          <MultiplierStatRow
+            icon={
+              <Image src={SLICING.mainMenu.speed} alt="" width={18} height={18} className="w-4 h-4 object-contain shrink-0" unoptimized />
+            }
+            label="Speed Level"
+            value={String(player.speedLvl)}
+          />
+          <MultiplierStatRow
+            icon={
+              <Image src={SLICING.mainMenu.power} alt="" width={18} height={18} className="w-4 h-4 object-contain shrink-0" unoptimized />
+            }
+            label="Power Level"
+            value={String(player.powerLvl)}
+          />
+          <MultiplierStatRow
+            icon={
+              <span className="w-4 h-4 shrink-0 text-center text-[10px] font-black text-white">×</span>
+            }
+            label="Total Multiplier"
+            value={`${player.multiplier.toFixed(2)}x`}
+          />
         </div>
       </SlicedPanel>
     </SlicedPage>

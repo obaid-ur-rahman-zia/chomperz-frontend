@@ -550,6 +550,12 @@ body {
   background: transparent;
 }
 
+.profile-stat-cell {
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.15);
+}
+
 .sliced-game-shell {
   min-height: 100dvh;
   width: 100%;

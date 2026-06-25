@@ -1,30 +1,43 @@
 import Image from "next/image";
 import { CrownIcon } from "@/components/Icons";
 import { formatRarity, type OwnedNft, type RarityTier } from "@/lib/chomper";
+import { SLICING } from "@/lib/slicing-paths";
 
 function rarityBorderClass(rarity: RarityTier): string {
   switch (rarity) {
     case "legendary":
-      return "border-[var(--gold)]";
+      return "ring-2 ring-[#facc15]";
     case "rare":
-      return "border-[var(--blue)]";
+      return "ring-2 ring-[#38bdf8]";
     case "uncommon":
-      return "border-[var(--green)]";
+      return "ring-2 ring-[#76B852]";
     default:
-      return "border-gray-600";
+      return "ring-1 ring-white/30";
   }
 }
 
-function rarityTextClass(rarity: RarityTier): string {
+function rarityTextClass(rarity: RarityTier, onDark?: boolean): string {
+  if (onDark) {
+    switch (rarity) {
+      case "legendary":
+        return "text-[#facc15]";
+      case "rare":
+        return "text-[#7dd3fc]";
+      case "uncommon":
+        return "text-[#4ade80]";
+      default:
+        return "text-white/80";
+    }
+  }
   switch (rarity) {
     case "legendary":
-      return "text-[var(--gold)]";
+      return "text-[#ca8a04]";
     case "rare":
-      return "text-[var(--blue)]";
+      return "text-[#2563eb]";
     case "uncommon":
-      return "text-[var(--green)]";
+      return "text-[#15803d]";
     default:
-      return "text-gray-400";
+      return "text-[#4a2f1a]";
   }
 }
 
@@ -45,67 +58,79 @@ interface NftGalleryProps {
   nfts: OwnedNft[];
   collectionName?: string;
   walletLinked: boolean;
+  onDarkPanel?: boolean;
 }
 
-export function NftGallery({ nfts, collectionName, walletLinked }: NftGalleryProps) {
+export function NftGallery({ nfts, collectionName, walletLinked, onDarkPanel }: NftGalleryProps) {
   const sorted = sortNfts(nfts);
+  const bodyText = onDarkPanel ? "text-white/90" : "text-[#4a2f1a]";
+  const metaText = onDarkPanel ? "text-white/70" : "text-[#4a2f1a]";
 
   return (
-    <div className="card mb-4">
+    <div>
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
-        <h3 className="stat-label mb-0">NFT Gallery</h3>
+        <h3 className="sliced-title text-sm md:text-base font-black text-[#f5d76e]">NFT Gallery</h3>
         {collectionName ? (
-          <span className="text-[10px] font-bold text-[var(--muted)]">{collectionName}</span>
+          <span className={`text-[10px] font-bold ${metaText}`}>{collectionName}</span>
         ) : null}
       </div>
 
       {!walletLinked ? (
-        <p className="text-sm text-[var(--muted)] font-bold">
-          Connect your wallet and tap <span className="text-[var(--green)]">NFTs</span> in the header
-          to sync your collection.
+        <p className={`text-xs md:text-sm font-bold leading-relaxed ${bodyText}`}>
+          Connect your wallet below to sync your NFT collection and boost your Z-Coin rate.
         </p>
       ) : sorted.length === 0 ? (
-        <p className="text-sm text-[var(--muted)] font-bold">
-          No NFTs found in your linked wallet for this collection. Tap{" "}
-          <span className="text-[var(--green)]">NFTs</span> in the header to refresh.
+        <p className={`text-xs md:text-sm font-bold leading-relaxed ${bodyText}`}>
+          No NFTs found in your linked wallet for this collection. Sync again from the wallet panel
+          on the dashboard.
         </p>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3">
           {sorted.map((nft) => {
             const isCrown = Boolean(nft.isCrownBound);
             const img = nftImage(nft);
             return (
               <div
                 key={nft.tokenId}
-                className={`bg-dark-card rounded-xl border-2 overflow-hidden ${rarityBorderClass(nft.rarity)}`}
+                className={`relative overflow-hidden rounded-lg ${rarityBorderClass(nft.rarity)}`}
               >
-                <div className="relative aspect-square bg-[#c9d0b6]">
+                <div className="relative w-full aspect-[4/5]">
                   <Image
-                    src={img}
-                    alt={`Token #${nft.tokenId}`}
+                    src={SLICING.inventory.assetBg}
+                    alt=""
                     fill
-                    className="object-contain p-2"
-                    sizes="(max-width: 640px) 50vw, 160px"
-                    unoptimized={img.startsWith("http")}
+                    className="object-fill pointer-events-none"
+                    unoptimized
                   />
-                  {isCrown && (
-                    <span
-                      className="absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[9px] font-bold text-[var(--gold)]"
-                      title="Bound to a Crown Land plot"
+                  <div className="relative z-[1] flex h-full flex-col p-2">
+                    <div className="relative flex-1 min-h-0 mb-1.5 rounded-md overflow-hidden bg-[#c9b896]/40">
+                      <Image
+                        src={img}
+                        alt={`Token #${nft.tokenId}`}
+                        fill
+                        className="object-contain p-1"
+                        sizes="(max-width: 640px) 50vw, 160px"
+                        unoptimized={img.startsWith("http")}
+                      />
+                      {isCrown && (
+                        <span
+                          className="absolute top-1 right-1 flex items-center gap-0.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[8px] font-bold text-[#facc15]"
+                          title="Bound to a Crown Land plot"
+                        >
+                          <CrownIcon className="w-3 h-3" />
+                          Crown
+                        </span>
+                      )}
+                    </div>
+                    <p className={`text-xs font-black text-center ${onDarkPanel ? "text-white" : "text-[#4a2f1a]"}`}>
+                      #{nft.tokenId}
+                    </p>
+                    <p
+                      className={`text-[10px] font-bold text-center mt-0.5 ${rarityTextClass(nft.rarity, onDarkPanel)}`}
                     >
-                      <CrownIcon className="w-3 h-3" />
-                      Crown
-                    </span>
-                  )}
-                </div>
-                <div className="p-2.5 text-center">
-                  <p className="text-xs font-black text-gray-200">#{nft.tokenId}</p>
-                  <p className={`text-[10px] font-bold mt-0.5 ${rarityTextClass(nft.rarity)}`}>
-                    {formatRarity(nft.rarity)}
-                  </p>
-                  {isCrown && (
-                    <p className="text-[9px] text-[var(--muted)] font-bold mt-1">Crown Land</p>
-                  )}
+                      {formatRarity(nft.rarity)}
+                    </p>
+                  </div>
                 </div>
               </div>
             );

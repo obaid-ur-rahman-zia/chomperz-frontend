@@ -10,6 +10,8 @@ interface SlicedPanelProps {
   /** Only if title is NOT baked into the panel art */
   title?: string;
   padding?: string;
+  /** frame = fixed aspect/grid overlay; content = panel grows with children, bg stretches */
+  fit?: "frame" | "content";
 }
 
 export function SlicedPanel({
@@ -18,9 +20,31 @@ export function SlicedPanel({
   className = "",
   title,
   padding = "10% 8% 8% 8%",
+  fit = "frame",
 }: SlicedPanelProps) {
+  if (fit === "content") {
+    return (
+      <div className={`w-full min-w-0 ${className}`}>
+        <div
+          className="relative w-full bg-no-repeat bg-[length:100%_100%]"
+          style={{
+            backgroundImage: `url("${src}")`,
+            padding,
+          }}
+        >
+          {title ? (
+            <h3 className="sliced-title text-center text-xs md:text-sm font-black text-[#f5d76e] mb-1 shrink-0 leading-tight">
+              {title}
+            </h3>
+          ) : null}
+          {children}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`w-full min-w-0 h-full  ${className}`}>
+    <div className={`w-full min-w-0 ${className}`}>
       <div className="grid w-full h-full [&>*]:col-start-1 [&>*]:row-start-1">
         <Image
           src={src}
@@ -32,7 +56,7 @@ export function SlicedPanel({
           unoptimized
         />
         <div
-          className="col-start-1 row-start-1 flex flex-col overflow-hidden min-h-0 min-w-0 h-full"
+          className="col-start-1 row-start-1 flex flex-col min-h-0 min-w-0 h-full"
           style={{ padding } as CSSProperties}
         >
           {title ? (
@@ -40,7 +64,7 @@ export function SlicedPanel({
               {title}
             </h3>
           ) : null}
-          <div className="flex-1 min-h-0 min-w-0 overflow-hidden flex flex-col">{children}</div>
+          <div className="flex-1 min-h-0 min-w-0 flex flex-col">{children}</div>
         </div>
       </div>
     </div>

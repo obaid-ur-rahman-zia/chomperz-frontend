@@ -20,6 +20,16 @@ import {
 } from "@/components/sliced";
 import { SLICING, SKILL_ICONS } from "@/lib/slicing-paths";
 
+const INPUT_ITEM_ICONS: Record<string, string> = {
+  wood: SLICING.assets.woodLog,
+  ore: SLICING.assets.ore,
+};
+
+const INPUT_ITEM_LABELS: Record<string, string> = {
+  wood: "Wood",
+  ore: "Ore",
+};
+
 interface ActiveSkillsPanelProps {
   initial: ActiveSkillsState;
   onRefresh: () => Promise<void>;
@@ -156,7 +166,7 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
       fit="content"
     >
       <div className="flex flex-col gap-1 md:gap-1.5">
-        <div className="grid grid-cols-4 gap-1 shrink-0 max-md:h-[4rem]">
+        <div className="grid grid-cols-4 gap-1 shrink-0 h-[3.5rem] sm:h-[4rem] md:h-[4.5rem]">
           {skills.skills.map((skill) => {
             const active = skills.selectedSkill === skill.id;
             const iconSrc = SKILL_ICONS[skill.id] ?? SLICING.assets.mining;
@@ -219,6 +229,41 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
             </div>
           </div>
         </div>
+
+        {needsInput && selected.inputItemId && (
+          <div className="relative w-full h-9 md:h-10 shrink-0">
+            <Image
+              src={SLICING.mainMenu.woodInventoryBar}
+              alt=""
+              fill
+              className="object-fill"
+              unoptimized
+            />
+            <div className="absolute inset-0 flex items-center justify-between px-2 text-[9px] md:text-[10px] font-black text-white">
+              <span className="flex items-center gap-1.5">
+                <span className="text-[#c4b5a0] uppercase text-[8px]">Requires</span>
+                <Image
+                  src={INPUT_ITEM_ICONS[selected.inputItemId] ?? SLICING.assets.woodLog}
+                  alt=""
+                  width={18}
+                  height={18}
+                  className="w-4 h-4 object-contain"
+                  unoptimized
+                />
+                <span>
+                  {INPUT_ITEM_LABELS[selected.inputItemId] ?? selected.inputItemId}
+                </span>
+              </span>
+              <span
+                className={`tabular-nums ${
+                  hasInput ? "text-[#4ade80]" : "text-red-400"
+                }`}
+              >
+                {selected.inputQty ?? 0} / {selected.inputQuantity ?? 0}
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="shrink-0">
           {!isRunning ? (

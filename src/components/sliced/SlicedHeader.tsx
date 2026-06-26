@@ -1,11 +1,15 @@
 "use client";
 
+import { FormEvent, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/Loading";
 import { UserMenu } from "@/components/UserMenu";
 import { SlicedCoinDisplay } from "./SlicedCoinDisplay";
 import { SLICING } from "@/lib/slicing-paths";
 import { usePlayerContext } from "@/context/PlayerContext";
+import { apiFetch } from "@/lib/api";
+import { toast } from "@/lib/toast";
 
 function HeaderSkeleton() {
   return (
@@ -17,6 +21,27 @@ function HeaderSkeleton() {
 
 export function SlicedHeader() {
   const { player, loading } = usePlayerContext();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+
+  async function handleSearch(e: FormEvent) {
+    e.preventDefault();
+    const raw = searchQuery.trim();
+    if (!raw) return;
+    setSearching(true);
+    try {
+      const handle = raw.startsWith("@") ? raw : `@${raw}`;
+      await apiFetch<{ userId: string; username: string }>(
+        `/api/players/by-handle/${encodeURIComponent(handle)}`
+      );
+      router.push(`/crib/view?handle=${encodeURIComponent(handle)}`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Player not found");
+    } finally {
+      setSearching(false);
+    }
+  }
 
   if (loading) return <HeaderSkeleton />;
   if (!player) return null;
@@ -49,30 +74,45 @@ export function SlicedHeader() {
           </div>
 
           {/* Search — tablet/desktop */}
-          <div className="hidden md:flex relative z-20 flex-1 min-w-0 max-w-lg mx-1 lg:mx-3">
+          <form
+            onSubmit={handleSearch}
+            className="hidden md:flex relative z-20 flex-1 min-w-0 max-w-lg mx-1 lg:mx-3"
+          >
             <div className="relative w-full h-9 lg:h-10">
               <Image
                 src={SLICING.navbar.searchBar}
                 alt=""
                 fill
-                className="object-fill"
+                className="object-fill pointer-events-none"
                 unoptimized
               />
               <div className="absolute inset-0 flex items-center px-3 lg:px-4 gap-2">
-                <Image
-                  src={SLICING.navbar.searchIcon}
-                  alt=""
-                  width={18}
-                  height={18}
-                  className="w-4 h-4 lg:w-[18px] lg:h-[18px] opacity-80 shrink-0"
-                  unoptimized
+                <button
+                  type="submit"
+                  disabled={searching}
+                  className="shrink-0 disabled:opacity-50"
+                  aria-label="Search player"
+                >
+                  <Image
+                    src={SLICING.navbar.searchIcon}
+                    alt=""
+                    width={18}
+                    height={18}
+                    className="w-4 h-4 lg:w-[18px] lg:h-[18px] opacity-80"
+                    unoptimized
+                  />
+                </button>
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search handle..."
+                  disabled={searching}
+                  className="flex-1 min-w-0 bg-transparent text-xs lg:text-sm text-white font-bold placeholder:text-[#b8b0a4] outline-none"
                 />
-                <span className="text-xs lg:text-sm text-[#b8b0a4] font-bold truncate">
-                  Search...
-                </span>
               </div>
             </div>
-          </div>
+          </form>
 
           {/* Mobile spacer */}
           <div className="flex-1 min-w-0 md:hidden" aria-hidden />

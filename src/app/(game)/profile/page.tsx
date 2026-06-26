@@ -13,6 +13,7 @@ import { SLICING } from "@/lib/slicing-paths";
 import { LogoutIcon } from "@/components/Icons";
 import { apiFetch, clearToken, formatCoinsCompact, formatPercent } from "@/lib/api";
 import { getChomperLabelFromPlayer } from "@/lib/chomper";
+import { formatHandle } from "@/lib/handle";
 
 function StatCell({
   label,
@@ -83,9 +84,7 @@ function ProfileContent() {
   const { economy } = player;
   const chomperLabel = getChomperLabelFromPlayer(player);
   const avatar = player.displayAvatarUrl || "/images/chomper.jpg";
-  const handle = player.twitterHandle.startsWith("@")
-    ? player.twitterHandle
-    : `@${player.twitterHandle}`;
+  const handle = formatHandle(player.twitterHandle);
 
   const rarityLabel =
     player.nftCount === 0

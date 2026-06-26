@@ -11,7 +11,7 @@ import {
 } from "react";
 import { apiFetch, clearToken, type ActiveSkillsState, type PlayerData } from "@/lib/api";
 import { LoadingScreen } from "@/components/Loading";
-import { SlicedActionButton } from "@/components/sliced";
+import { SlicedActionButton, SlicedPanel } from "@/components/sliced";
 import { SLICING } from "@/lib/slicing-paths";
 
 interface RefreshOptions {
@@ -45,21 +45,40 @@ function PlayerLoadGate({
 }) {
   if (error) {
     return (
-      <main className="min-h-[50vh] flex flex-col items-center justify-center px-4 text-center">
-        <div className="loading-glass-panel max-w-md w-full">
-        <p className="text-sm font-bold text-white">{error}</p>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <SlicedActionButton src={SLICING.mainMenu.button} onClick={onRetry} className="h-10 min-w-[7rem]">
-            Try Again
-          </SlicedActionButton>
-          <SlicedActionButton
-            src={SLICING.shop.unselectedButton}
-            onClick={onLogout}
-            className="h-10 min-w-[7rem]"
+      <main
+        className="login-page flex min-h-screen items-center justify-center p-4 sm:p-6"
+        style={{ backgroundImage: `url("${SLICING.mainMenu.bg}")` }}
+      >
+        <div className="w-full max-w-sm">
+          <SlicedPanel
+            src={SLICING.mainMenu.characterPanel}
+            padding="16% 12% 12% 12%"
+            fit="content"
+            className="w-full"
           >
-            Back to Login
-          </SlicedActionButton>
-        </div>
+            <div className="flex flex-col items-center text-center gap-4">
+              <p className="sliced-title text-sm sm:text-base font-black text-[#f5d76e]">
+                Could not load your Chomper
+              </p>
+              <p className="text-xs font-bold text-[#c4b5a0] leading-relaxed">{error}</p>
+              <div className="flex flex-wrap items-center justify-center gap-2 w-full">
+                <SlicedActionButton
+                  src={SLICING.mainMenu.button}
+                  onClick={onRetry}
+                  className="h-10 min-w-[7rem]"
+                >
+                  Try Again
+                </SlicedActionButton>
+                <SlicedActionButton
+                  src={SLICING.shop.unselectedButton}
+                  onClick={onLogout}
+                  className="h-10 min-w-[7rem]"
+                >
+                  Back to Login
+                </SlicedActionButton>
+              </div>
+            </div>
+          </SlicedPanel>
         </div>
       </main>
     );

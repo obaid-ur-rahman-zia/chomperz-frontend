@@ -29,8 +29,8 @@ export const metadata: Metadata = {
   description: APP_DESCRIPTION,
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: [{ url: "/images/chomper.jpg", type: "image/jpeg" }],
-    apple: [{ url: "/images/chomper.jpg", type: "image/jpeg" }],
+    icon: [{ url: "/images/chomper.jpg", type: "image/jpg" }],
+    apple: [{ url: "/images/chomper.jpg", type: "image/jpg" }],
   },
   appleWebApp: {
     capable: true,

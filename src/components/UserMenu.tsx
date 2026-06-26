@@ -8,6 +8,7 @@ import { ChevronDownIcon, LogoutIcon, ProfileIcon } from "@/components/Icons";
 import { SlicedActionButton } from "@/components/sliced";
 import { SLICING } from "@/lib/slicing-paths";
 import { apiFetch, clearToken } from "@/lib/api";
+import { formatHandle } from "@/lib/handle";
 
 interface UserMenuProps {
   twitterHandle: string;
@@ -17,10 +18,6 @@ interface UserMenuProps {
   /** Reference header: square avatar + separate username pill */
   headerSplit?: boolean;
   className?: string;
-}
-
-function formatHandle(handle: string) {
-  return handle.startsWith("@") ? handle : `@${handle}`;
 }
 
 function ProfileDropdown({

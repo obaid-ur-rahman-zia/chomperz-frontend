@@ -17,14 +17,14 @@ export default function manifest(): MetadataRoute.Manifest {
     icons: [
       {
         src: "/images/chomper.jpg",
-        sizes: "512x512",
-        type: "image/jpeg",
+        sizes: "any",
+        type: "image/svg+xml",
         purpose: "any",
       },
       {
         src: "/images/chomper.jpg",
-        sizes: "512x512",
-        type: "image/jpeg",
+        sizes: "any",
+        type: "image/svg+xml",
         purpose: "maskable",
       },
     ],

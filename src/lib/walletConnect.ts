@@ -39,7 +39,7 @@ export async function connectWalletConnectProvider() {
         name: "Chomperz Basecamp",
         description: "Chomperz Web2.5 idle game",
         url: window.location.origin,
-        icons: [`${window.location.origin}/chomper.svg`],
+        icons: [`${window.location.origin}/images/chomper.jpg`],
       },
     });
   }

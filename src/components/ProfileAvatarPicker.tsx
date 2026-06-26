@@ -88,6 +88,12 @@ export function ProfileAvatarPicker({
 
   useEffect(() => {
     if (!open) return;
+    setPendingSource(resolvePendingSource(player));
+    setPendingTokenId(player.avatarNftTokenId ?? null);
+  }, [open, player]);
+
+  useEffect(() => {
+    if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {

@@ -85,30 +85,18 @@ function LoginContent() {
       style={{ backgroundImage: `url("${SLICING.mainMenu.bg}")` }}
     >
       <div className="w-full max-w-md">
-        <div className="flex justify-center mb-4">
-          <Image
-            src={SLICING.logo}
-            alt="ChomperZ Idle"
-            width={220}
-            height={64}
-            className="h-12 sm:h-14 w-auto object-contain drop-shadow-lg"
-            priority
-            unoptimized
-          />
-        </div>
-
         <SlicedPanel
           src={SLICING.mainMenu.characterPanel}
           padding="20% 12% 12% 12%"
           className="aspect-[4/5] sm:aspect-[5/6] max-h-[34rem]"
         >
           <div className="flex flex-col items-center h-full text-center">
-            <div className="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0 mb-2">
+            <div className="relative w-full max-w-[220px] h-14 sm:h-16 shrink-0 mb-3">
               <Image
-                src={SLICING.assets.chomperFront}
-                alt="Chomper"
+                src={SLICING.logo}
+                alt="ChomperZ Idle"
                 fill
-                className="object-contain object-bottom drop-shadow-[0_4px_8px_rgba(0,0,0,0.35)]"
+                className="object-contain object-center drop-shadow-lg"
                 priority
                 unoptimized
               />
@@ -117,20 +105,9 @@ function LoginContent() {
             <h1 className="sliced-title text-xl sm:text-2xl font-black text-white mb-1">
               CHOMPERZ
             </h1>
-            <p className="text-[#5c4a32] text-xs sm:text-sm font-bold mb-3">
+            <p className="text-[#5c4a32] text-xs sm:text-sm font-bold mb-4">
               Sign in to start farming Z-Coins
             </p>
-
-            <div className="flex flex-wrap justify-center gap-1.5 mb-4 w-full">
-              {["Idle Farming", "NFT Boost", "10×10 Map"].map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-[#8b7355]/60 bg-[#e8dcc0]/50 px-2.5 py-1 text-[10px] font-extrabold text-[#3d2516]"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
 
             <a
               href="/api/auth/twitter"
@@ -184,16 +161,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={
-        <main
-          className="login-page flex items-center justify-center"
-          style={{ backgroundImage: `url("${SLICING.mainMenu.bg}")` }}
-        >
-          <LoadingScreen />
-        </main>
-      }
-    >
+    <Suspense fallback={<LoadingScreen label="Loading..." />}>
       <LoginContent />
     </Suspense>
   );

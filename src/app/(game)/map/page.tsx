@@ -12,8 +12,9 @@ import { CrownIcon } from "@/components/Icons";
 import { usePlayer } from "@/hooks/usePlayer";
 import { useTerritorySocket, type PlotPatchPayload } from "@/hooks/useTerritorySocket";
 import { toast } from "@/lib/toast";
-import { SlicedPage, SlicedPanel, SlicedImageButton, SlicedActionButton } from "@/components/sliced";
+import { SlicedPage, SlicedPanel, SlicedActionButton } from "@/components/sliced";
 import { SLICING } from "@/lib/slicing-paths";
+import { formatHandle } from "@/lib/handle";
 import Image from "next/image";
 import { MapSkeleton, PlotDetailSkeleton, Spinner } from "@/components/Loading";
 
@@ -206,10 +207,20 @@ export default function MapPage() {
     return <MapSkeleton />;
   }
 
-  const canPurchase =
-    detail?.purchasePrice != null && detail.status === "unclaimed" && !detail.isLegendary;
-  const canTakeover = detail?.canTakeover === true;
-  const canBid = detail?.status === "owned" && detail.landlordHandle && !detail.isLegendary;
+  const canPurchase = detail?.viewerCanPurchase === true;
+  const canTakeover = detail?.viewerCanTakeover === true;
+  const showRenters =
+    detail?.status === "owned" && detail.landlordHandle && !detail.isLegendary;
+  const canBid = detail?.viewerCanBid === true;
+  const showPurchaseBlocked =
+    detail?.purchasePrice != null &&
+    detail.status === "unclaimed" &&
+    !detail.isLegendary &&
+    !canPurchase;
+  const showTakeoverBlocked =
+    detail?.canTakeover === true && !canTakeover;
+  const showBidBlocked =
+    showRenters && !canBid && detail?.viewerOwnsFrontierLand === true;
   const legendaryNftId = detail?.legendaryTokenId ?? null;
   const showLegendaryNftHint =
     detail?.isLegendary === true &&
@@ -240,6 +251,16 @@ export default function MapPage() {
                     <Image src={bgImg} alt="" fill className="object-cover" unoptimized />
                   ) : null}
                   <span className="relative z-[1] flex flex-col items-center justify-end h-full leading-tight p-0.5">
+                    {handle && plot.landlordAvatarUrl ? (
+                      <div className="relative w-3 h-3 sm:w-4 sm:h-4 rounded-full overflow-hidden border border-white/40 mb-0.5 shrink-0">
+                        <UserAvatar
+                          src={plot.landlordAvatarUrl || "/images/chomper.jpg"}
+                          alt=""
+                          size={16}
+                          className="object-cover w-full h-full"
+                        />
+                      </div>
+                    ) : null}
                     <span className="block text-[7px] sm:text-[8px] font-black drop-shadow">
                       {displayNum}
                     </span>
@@ -249,7 +270,7 @@ export default function MapPage() {
                       </span>
                     ) : handle ? (
                       <span className="block text-[6px] sm:text-[7px] truncate w-full text-center drop-shadow">
-                        @{handle}
+                        {formatHandle(handle)}
                       </span>
                     ) : null}
                   </span>
@@ -313,6 +334,14 @@ export default function MapPage() {
                 </div>
               )}
 
+              {showPurchaseBlocked && (
+                <p className="text-xs font-bold text-red-300 mb-3 shrink-0">
+                  {(player?.nftCount ?? 0) <= 0
+                    ? "NFT required to buy land"
+                    : "Connect wallet to purchase land"}
+                </p>
+              )}
+
               {canPurchase && (
                 <div className="mb-3 shrink-0">
                   <p className="text-xs font-bold text-white/80 mb-2">
@@ -340,6 +369,14 @@ export default function MapPage() {
                     </p>
                   )}
                 </div>
+              )}
+
+              {showTakeoverBlocked && (
+                <p className="text-xs font-bold text-red-300 mb-3 shrink-0">
+                  {(player?.nftCount ?? 0) <= 0
+                    ? "NFT required to take over land"
+                    : "Connect wallet to take over land"}
+                </p>
               )}
 
               {canTakeover && (
@@ -370,7 +407,7 @@ export default function MapPage() {
                     <p className="text-[#4ade80]">
                       Status: <span className="text-white">Current LandLord</span>
                     </p>
-                    <p className="text-white">Name: @{detail.landlordHandle ?? "unknown"}</p>
+                    <p className="text-white">Name: {formatHandle(detail.landlordHandle ?? "unknown")}</p>
                     <p className="text-[#c4b5a0] text-[10px]">
                       Earning: Takes {detail.landlordTaxPct ?? 10}% of all rent Collected
                     </p>
@@ -378,7 +415,7 @@ export default function MapPage() {
                 </div>
               )}
 
-              {canBid && (
+              {showRenters && (
                 <>
                   <div className="mb-3 flex-1 min-h-0">
                     <p className="text-[10px] font-black text-[#f5d76e] uppercase mb-2">
@@ -399,7 +436,7 @@ export default function MapPage() {
                             />
                             <div className="absolute inset-0 flex justify-between items-center px-2 text-[10px] font-bold text-white">
                               <span>
-                                {i + 1}. @{r.twitterHandle || r.walletAddress.slice(0, 8)}
+                                {i + 1}. {formatHandle(r.twitterHandle || r.walletAddress.slice(0, 8))}
                               </span>
                               <span className="text-[#4ade80] tabular-nums">
                                 ${r.sevenDayBid ?? r.escrowBalance} / Day
@@ -411,33 +448,41 @@ export default function MapPage() {
                     )}
                   </div>
 
-                  <div className="flex gap-2 mt-auto items-end shrink-0 pt-2">
-                    <div className="relative flex-1 h-10">
-                      <Image
-                        src={SLICING.map.bidBar}
-                        alt=""
-                        fill
-                        className="object-fill"
-                        unoptimized
-                      />
-                      <input
-                        type="number"
-                        min={detail.minBid ?? 7}
-                        step={1}
-                        value={bidAmount}
-                        onChange={(e) => setBidAmount(e.target.value)}
-                        className="absolute inset-0 bg-transparent px-3 font-black text-white text-sm outline-none w-full"
-                      />
+                  {showBidBlocked && (
+                    <p className="text-xs font-bold text-red-300 mb-2 shrink-0">
+                      Land owners cannot rent on other plots
+                    </p>
+                  )}
+
+                  {canBid && (
+                    <div className="flex gap-2 mt-auto items-end shrink-0 pt-2">
+                      <div className="relative flex-1 h-10">
+                        <Image
+                          src={SLICING.map.bidBar}
+                          alt=""
+                          fill
+                          className="object-fill"
+                          unoptimized
+                        />
+                        <input
+                          type="number"
+                          min={detail.minBid ?? 7}
+                          step={1}
+                          value={bidAmount}
+                          onChange={(e) => setBidAmount(e.target.value)}
+                          className="absolute inset-0 bg-transparent px-3 font-black text-white text-sm outline-none w-full"
+                        />
+                      </div>
+                      <SlicedActionButton
+                        src={SLICING.map.outbidButton}
+                        onClick={handleOutbid}
+                        disabled={bidding}
+                        className="h-10 min-w-[6.5rem]"
+                      >
+                        {bidding ? <Spinner size="sm" /> : "Outbid"}
+                      </SlicedActionButton>
                     </div>
-                    <SlicedImageButton
-                      src={SLICING.map.outbidButton}
-                      label="Outbid"
-                      onClick={handleOutbid}
-                      disabled={bidding}
-                      width={100}
-                      height={40}
-                    />
-                  </div>
+                  )}
                 </>
               )}
             </div>

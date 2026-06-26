@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { UserAvatar } from "@/components/UserAvatar";
 import { ProfileAvatarPicker } from "@/components/ProfileAvatarPicker";
 import { SlicedPanel } from "@/components/sliced";
 import { SLICING } from "@/lib/slicing-paths";
 import { formatPercent, type PlayerData } from "@/lib/api";
+
+const DEFAULT_CHOMPER = "/images/chomper.jpg";
 
 interface DashboardCharacterPanelProps {
   player: PlayerData;
@@ -43,6 +46,7 @@ export function DashboardCharacterPanel({
   const [pickerOpen, setPickerOpen] = useState(false);
   const { economy } = player;
   const powerPct = formatPercent(Math.max(0, economy.powerMultiplier - 1));
+  const avatarSrc = player.displayAvatarUrl || DEFAULT_CHOMPER;
 
   return (
     <SlicedPanel
@@ -58,14 +62,12 @@ export function DashboardCharacterPanel({
             className="relative w-full h-full group"
             aria-label="Change profile picture"
           >
-            <div className="relative w-full h-full">
-              <Image
-                src={SLICING.assets.chomperFront}
-                alt="Chomper"
-                fill
+            <div className="relative w-full h-full overflow-hidden rounded-lg bg-[#d4b896]/30">
+              <UserAvatar
+                key={avatarSrc}
+                src={avatarSrc}
+                alt={chomperLabel}
                 className="object-contain object-bottom drop-shadow-[0_3px_6px_rgba(0,0,0,0.35)]"
-                priority
-                unoptimized
               />
             </div>
             <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-black/15 rounded" />

@@ -86,6 +86,7 @@ export interface LeaderboardEntry {
   userId: string;
   username: string;
   profilePicUrl: string;
+  displayAvatarUrl?: string;
   value: number;
 }
 
@@ -159,6 +160,10 @@ export interface PlotDetail extends PlotSummary {
   canTakeover?: boolean;
   loginRemainingMs?: number | null;
   landlordTaxPct?: number;
+  viewerOwnsFrontierLand?: boolean;
+  viewerCanPurchase?: boolean;
+  viewerCanTakeover?: boolean;
+  viewerCanBid?: boolean;
 }
 
 export interface FurnitureCost {

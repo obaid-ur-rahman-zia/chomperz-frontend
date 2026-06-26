@@ -58,9 +58,9 @@ function NavTab({
             unoptimized
           />
           <span
-            className={`font-black leading-none truncate sliced-btn-text ${
+            className={`font-black sliced-title leading-none truncate sliced-btn-text ${
               mobile ? "text-[8px] hidden w-full text-center" : "text-[10px] md:text-[15px]"
-            } ${active ? "text-white" : "text-[#462517]"}`}
+            } ${active ? "text-white" : "text-[#ffe2d6]"}`}
           >
             {displayLabel}
           </span>

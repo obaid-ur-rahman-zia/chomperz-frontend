@@ -511,6 +511,13 @@ body {
   gap: 1rem;
 }
 
+.loading-screen {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
 .skeleton {
   background: linear-gradient(
     110deg,

@@ -1,3 +1,9 @@
+"use client";
+
+import Image from "next/image";
+import { SlicedPanel } from "@/components/sliced";
+import { SLICING } from "@/lib/slicing-paths";
+
 type SpinnerSize = "sm" | "md" | "lg";
 
 const spinnerSizes: Record<SpinnerSize, string> = {
@@ -26,14 +32,42 @@ export function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`skeleton ${className}`} aria-hidden />;
 }
 
-export function LoadingScreen({ label }: { label?: string }) {
+export function LoadingScreen({ label = "Loading your Chomper..." }: { label?: string }) {
   return (
-    <main className="min-h-[60vh] flex flex-col items-center justify-center px-4">
-      <div className="loading-glass-panel">
-        <Spinner size="lg" />
-        {label && (
-          <p className="text-sm font-bold text-white/80">{label}</p>
-        )}
+    <main
+      className="loading-screen login-page flex min-h-screen items-center justify-center p-4 sm:p-6"
+      style={{ backgroundImage: `url("${SLICING.mainMenu.bg}")` }}
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <div className="w-full max-w-xs sm:max-w-sm">
+        <SlicedPanel
+          src={SLICING.mainMenu.characterPanel}
+          padding="16% 12% 12% 12%"
+          fit="content"
+          className="w-full"
+        >
+          <div className="flex flex-col items-center text-center gap-4 py-1">
+            <div className="relative w-full max-w-[13rem] h-14 sm:h-16 shrink-0">
+              <Image
+                src={SLICING.logo}
+                alt="ChomperZ Idle"
+                fill
+                className="object-contain object-center drop-shadow-lg"
+                priority
+                unoptimized
+              />
+            </div>
+
+            <Spinner size="lg" />
+
+            <div className="space-y-1">
+              <p className="sliced-title text-sm sm:text-base font-black text-[#f5d76e] leading-tight">
+                {label}
+              </p>
+            </div>
+          </div>
+        </SlicedPanel>
       </div>
     </main>
   );
@@ -124,9 +158,9 @@ export function ShopSkeleton() {
           <Skeleton key={i} className="h-9 w-20 rounded-lg" />
         ))}
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-2.5 w-full">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-48 w-full rounded-xl" />
+          <Skeleton key={i} className="aspect-[5/8] w-full rounded-xl" />
         ))}
       </div>
     </div>

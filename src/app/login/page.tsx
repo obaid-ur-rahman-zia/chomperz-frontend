@@ -84,14 +84,14 @@ function LoginContent() {
       className="login-page flex items-center justify-center p-4 sm:p-6"
       style={{ backgroundImage: `url("${SLICING.mainMenu.bg}")` }}
     >
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-sm sm:max-w-md">
         <SlicedPanel
           src={SLICING.mainMenu.characterPanel}
-          padding="20% 12% 12% 12%"
-          className="aspect-[4/5] sm:aspect-[5/6] max-h-[34rem]"
+          fit="content"
+          padding="14% 11% 9% 11%"
         >
-          <div className="flex flex-col items-center h-full text-center">
-            <div className="relative w-full max-w-[220px] h-14 sm:h-16 shrink-0 mb-3">
+          <div className="flex flex-col items-center text-center">
+            <div className="relative w-full max-w-[200px] h-12 sm:h-14 shrink-0 mb-2">
               <Image
                 src={SLICING.logo}
                 alt="ChomperZ Idle"
@@ -102,16 +102,16 @@ function LoginContent() {
               />
             </div>
 
-            <h1 className="sliced-title text-xl sm:text-2xl font-black text-white mb-1">
+            <h1 className="sliced-title text-xl sm:text-2xl font-black text-white mb-0.5">
               CHOMPERZ
             </h1>
-            <p className="text-[#5c4a32] text-xs sm:text-sm font-bold mb-4">
+            <p className="text-[#5c4a32] text-xs sm:text-sm font-bold mb-3">
               Sign in to start farming Z-Coins
             </p>
 
             <a
               href="/api/auth/twitter"
-              className="relative w-full h-10 sm:h-11 flex items-center justify-center no-underline mb-2 transition-transform active:scale-[0.98]"
+              className="relative w-full h-10 sm:h-11 flex items-center justify-center no-underline transition-transform active:scale-[0.98]"
             >
               <Image
                 src={SLICING.mainMenu.progressiveButton}

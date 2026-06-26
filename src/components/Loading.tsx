@@ -185,22 +185,22 @@ export function SkillsSkeleton() {
 
 export function CribSkeleton() {
   return (
-  <div className="flex flex-col md:flex-row w-full max-w-4xl mx-auto gap-3">
-    <div className="w-full md:flex-1">
-      <Skeleton className="w-full aspect-[8/5] min-h-[11rem] rounded-2xl" />
-      <div className="flex gap-2 mt-2.5 md:hidden">
-        <Skeleton className="h-9 flex-1 rounded-xl" />
-        <Skeleton className="h-9 flex-1 rounded-xl" />
+    <div className="flex flex-col md:flex-row w-full gap-3 md:gap-2 lg:gap-3 items-stretch">
+      <div className="w-full md:flex-1">
+        <Skeleton className="w-full aspect-[8/5] min-h-[11rem] md:min-h-0 md:aspect-auto md:h-full rounded-2xl" />
+        <div className="flex gap-2 mt-2.5 md:hidden">
+          <Skeleton className="h-9 flex-1 rounded-xl" />
+          <Skeleton className="h-9 flex-1 rounded-xl" />
+        </div>
+      </div>
+      <div className="w-full max-w-md mx-auto md:max-w-none md:mx-0 md:w-[34%] shrink-0">
+        <Skeleton className="w-full rounded-2xl md:min-h-[20rem]" />
+        <div className="hidden md:flex gap-2 mt-1.5">
+          <Skeleton className="h-8 flex-1 rounded-xl" />
+          <Skeleton className="h-8 flex-1 rounded-xl" />
+        </div>
       </div>
     </div>
-    <div className="w-full max-w-md mx-auto md:max-w-none md:w-[34%]">
-      <Skeleton className="w-full min-h-[12rem] rounded-2xl" />
-      <div className="hidden md:flex gap-2 mt-2">
-        <Skeleton className="h-9 flex-1 rounded-xl" />
-        <Skeleton className="h-9 flex-1 rounded-xl" />
-      </div>
-    </div>
-  </div>
   );
 }
 

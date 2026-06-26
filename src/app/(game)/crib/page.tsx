@@ -607,42 +607,59 @@ export default function CribPage() {
       <SlicedActionButton
         src={!previewMode ? SLICING.shop.selectedButton : SLICING.shop.unselectedButton}
         onClick={enterEditMode}
-        className="flex-1 h-9 md:h-9 text-[11px] md:text-xs"
+        className="flex-1 h-9 md:h-8 lg:h-9 text-[11px] md:text-[10px] lg:text-xs"
       >
         Modify Crib
       </SlicedActionButton>
       <SlicedActionButton
         src={previewMode ? SLICING.shop.selectedButton : SLICING.shop.unselectedButton}
         onClick={enterPreviewMode}
-        className="flex-1 h-9 md:h-9 text-[11px] md:text-xs"
+        className="flex-1 h-9 md:h-8 lg:h-9 text-[11px] md:text-[10px] lg:text-xs"
       >
         Preview
       </SlicedActionButton>
     </>
   );
 
-  const editLegend = (
+  const editLegendMobile = (
     <>
       <span className="flex items-center gap-0.5">
-        <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#4ade80]/55 border border-[#4ade80] shrink-0" />
+        <span className="w-2 h-2 bg-[#4ade80]/55 border border-[#4ade80] shrink-0" />
         Place items
       </span>
       <span className="flex items-center gap-0.5">
-        <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500/55 border border-red-400 shrink-0" />
+        <span className="w-2 h-2 bg-red-500/55 border border-red-400 shrink-0" />
         Invalid
       </span>
       <span className="flex items-center gap-0.5">
-        <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-white/25 border border-white/50 shrink-0" />
+        <span className="w-2 h-2 bg-white/25 border border-white/50 shrink-0" />
         Empty
       </span>
     </>
   );
 
+  const editLegendDesktop = (
+    <>
+      <span className="flex items-center gap-0.5">
+        <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-[#4ade80]/55 border border-[#4ade80]" />
+        Place items
+      </span>
+      <span className="flex items-center gap-0.5">
+        <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-red-500/55 border border-red-400" />
+        Invalid Placement
+      </span>
+      <span className="flex items-center gap-0.5">
+        <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-white/25 border border-white/50" />
+        Empty Cell
+      </span>
+    </>
+  );
+
   return (
-    <SlicedPage className="w-full">
-      <div className="flex flex-col md:flex-row w-full max-w-4xl mx-auto gap-3 md:gap-3 items-stretch min-w-0">
-        <div className="flex flex-col w-full md:flex-1 min-w-0">
-          <div className="relative w-full aspect-[8/5] min-h-[11rem] sm:min-h-[14rem] md:min-h-0 overflow-visible shrink-0">
+    <SlicedPage>
+      <div className="flex flex-col md:flex-row w-full gap-3 md:gap-2 lg:gap-3 items-stretch min-w-0">
+        <div className="flex flex-col w-full md:flex-1 md:min-w-0 md:relative">
+          <div className="relative w-full aspect-[8/5] min-h-[11rem] sm:min-h-[14rem] md:absolute md:inset-0 md:aspect-auto md:min-h-0 overflow-visible shrink-0">
           <div
             ref={gridRef}
             className="absolute inset-0 overflow-visible rounded-sm touch-none"
@@ -809,8 +826,8 @@ export default function CribPage() {
               unoptimized
             />
             {!previewMode && (
-            <div className="absolute inset-0 flex items-center gap-1.5 md:gap-2 px-2 text-[7px] md:text-[7px] font-bold text-white">
-              {editLegend}
+            <div className="absolute inset-0 flex items-center gap-1.5 md:gap-2 px-2 text-[6px] md:text-[7px] font-bold text-white">
+              {editLegendDesktop}
             </div>
             )}
           </div>
@@ -818,7 +835,7 @@ export default function CribPage() {
 
           {!previewMode && (
             <div className="md:hidden flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[10px] font-bold text-white/90">
-              {editLegend}
+              {editLegendMobile}
             </div>
           )}
 
@@ -827,14 +844,16 @@ export default function CribPage() {
           </div>
         </div>
 
-        <div className="relative w-full max-w-md mx-auto md:mx-0 md:max-w-none md:w-[34%] lg:max-w-[14rem] shrink-0 flex flex-col">
-          <div className="relative w-full md:flex-1 min-h-0 overflow-hidden">
+        <div
+          className="relative shrink-0 flex flex-col self-stretch w-full max-w-md mx-auto md:max-w-none md:mx-0 md:w-[34%]"
+        >
+          <div className="relative w-full flex-1 min-h-0 overflow-hidden">
             <Image
               src={SLICING.crib.mainPanel}
               alt=""
               width={300}
               height={400}
-              className="w-full h-auto min-h-[12rem] md:min-h-0 pointer-events-none select-none"
+              className="w-full h-auto pointer-events-none select-none"
               unoptimized
             />
             <div

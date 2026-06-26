@@ -185,19 +185,22 @@ export function SkillsSkeleton() {
 
 export function CribSkeleton() {
   return (
-    <>
-      <Skeleton className="h-8 w-32 mb-4" />
-      <div className="skeleton-wrap mb-4">
-        <Skeleton className="w-full max-w-md mx-auto aspect-[8/5] rounded-2xl" />
-        <div className="flex gap-2 mt-4">
-          <Skeleton className="h-12 flex-1 rounded-xl" />
-          <Skeleton className="h-12 flex-1 rounded-xl" />
-        </div>
+  <div className="flex flex-col md:flex-row w-full max-w-4xl mx-auto gap-3">
+    <div className="w-full md:flex-1">
+      <Skeleton className="w-full aspect-[8/5] min-h-[11rem] rounded-2xl" />
+      <div className="flex gap-2 mt-2.5 md:hidden">
+        <Skeleton className="h-9 flex-1 rounded-xl" />
+        <Skeleton className="h-9 flex-1 rounded-xl" />
       </div>
-      <div className="skeleton-wrap">
-        <Skeleton className="h-9 w-28 rounded-xl" />
+    </div>
+    <div className="w-full max-w-md mx-auto md:max-w-none md:w-[34%]">
+      <Skeleton className="w-full min-h-[12rem] rounded-2xl" />
+      <div className="hidden md:flex gap-2 mt-2">
+        <Skeleton className="h-9 flex-1 rounded-xl" />
+        <Skeleton className="h-9 flex-1 rounded-xl" />
       </div>
-    </>
+    </div>
+  </div>
   );
 }
 

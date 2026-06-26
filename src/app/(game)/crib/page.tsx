@@ -139,6 +139,7 @@ function PlacementControls({
   onConfirm,
   confirmDisabled,
   cancelLabel,
+  compact = false,
 }: {
   x: number;
   y: number;
@@ -149,7 +150,13 @@ function PlacementControls({
   onConfirm: () => void;
   confirmDisabled: boolean;
   cancelLabel: string;
+  compact?: boolean;
 }) {
+  const rotateSize = compact ? 30 : 40;
+  const actionSize = compact ? 28 : 36;
+  const rotateOffset = compact ? 4 : 8;
+  const actionOffset = compact ? 6 : 10;
+
   return (
     <>
       <div
@@ -157,7 +164,7 @@ function PlacementControls({
         style={{
           left: `${((x + w) / GRID_COLS) * 100}%`,
           top: `${((y + h * 0.45) / GRID_ROWS) * 100}%`,
-          transform: "translate(8px, -50%)",
+          transform: `translate(${rotateOffset}px, -50%)`,
         }}
       >
         <CribControlButton
@@ -165,16 +172,16 @@ function PlacementControls({
           variant="rotate"
           onClick={onRotate}
           label="Rotate"
-          size={40}
+          size={rotateSize}
         />
       </div>
 
       <div
-        className="absolute flex gap-2 z-20 pointer-events-auto"
+        className="absolute flex gap-1.5 sm:gap-2 z-20 pointer-events-auto"
         style={{
           left: `${((x + w / 2) / GRID_COLS) * 100}%`,
           top: `${((y + h) / GRID_ROWS) * 100}%`,
-          transform: "translate(-50%, 10px)",
+          transform: `translate(-50%, ${actionOffset}px)`,
         }}
       >
         <CribControlButton
@@ -182,7 +189,7 @@ function PlacementControls({
           variant="cross"
           onClick={onCancel}
           label={cancelLabel}
-          size={36}
+          size={actionSize}
         />
         <CribControlButton
           bgSrc={SLICING.crib.tick}
@@ -190,7 +197,7 @@ function PlacementControls({
           onClick={onConfirm}
           disabled={confirmDisabled}
           label="Confirm"
-          size={36}
+          size={actionSize}
         />
       </div>
     </>
@@ -219,6 +226,15 @@ export default function CribPage() {
   const catalogRef = useRef(catalog);
   catalogRef.current = catalog;
   const [isDraggingOverlay, setIsDraggingOverlay] = useState(false);
+  const [compactControls, setCompactControls] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setCompactControls(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   const load = useCallback(async () => {
     const data = await apiFetch<{
@@ -372,6 +388,23 @@ export default function CribPage() {
     setEditing({ ...entry });
     setSelectedPlaceId(entry.itemId);
     setPending(null);
+  }
+
+  function enterEditMode() {
+    if (previewMode) {
+      toast.info("Modify mode — tap items to place or move furniture");
+    }
+    setPreviewMode(false);
+    setPending(null);
+    setEditing(null);
+    setSelectedPlaceId(null);
+  }
+
+  function enterPreviewMode() {
+    setPreviewMode(true);
+    setPending(null);
+    setSelectedPlaceId(null);
+    setEditing(null);
   }
 
   function handleOwnedItemTap(itemId: string) {
@@ -569,10 +602,47 @@ export default function CribPage() {
         }
       : null;
 
+  const modeButtons = (
+    <>
+      <SlicedActionButton
+        src={!previewMode ? SLICING.shop.selectedButton : SLICING.shop.unselectedButton}
+        onClick={enterEditMode}
+        className="flex-1 h-9 md:h-9 text-[11px] md:text-xs"
+      >
+        Modify Crib
+      </SlicedActionButton>
+      <SlicedActionButton
+        src={previewMode ? SLICING.shop.selectedButton : SLICING.shop.unselectedButton}
+        onClick={enterPreviewMode}
+        className="flex-1 h-9 md:h-9 text-[11px] md:text-xs"
+      >
+        Preview
+      </SlicedActionButton>
+    </>
+  );
+
+  const editLegend = (
+    <>
+      <span className="flex items-center gap-0.5">
+        <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-[#4ade80]/55 border border-[#4ade80] shrink-0" />
+        Place items
+      </span>
+      <span className="flex items-center gap-0.5">
+        <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500/55 border border-red-400 shrink-0" />
+        Invalid
+      </span>
+      <span className="flex items-center gap-0.5">
+        <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-white/25 border border-white/50 shrink-0" />
+        Empty
+      </span>
+    </>
+  );
+
   return (
-    <SlicedPage>
-      <div className="flex w-full gap-2 md:gap-3 items-stretch min-w-0">
-        <div className="relative flex-1 min-w-0">
+    <SlicedPage className="w-full">
+      <div className="flex flex-col md:flex-row w-full max-w-4xl mx-auto gap-3 md:gap-3 items-stretch min-w-0">
+        <div className="flex flex-col w-full md:flex-1 min-w-0">
+          <div className="relative w-full aspect-[8/5] min-h-[11rem] sm:min-h-[14rem] md:min-h-0 overflow-visible shrink-0">
           <div
             ref={gridRef}
             className="absolute inset-0 overflow-visible rounded-sm touch-none"
@@ -582,6 +652,12 @@ export default function CribPage() {
               backgroundPosition: "center",
             }}
           >
+            {previewMode && (
+              <div className="absolute top-1.5 left-1.5 z-[4] px-2 py-1 rounded-md bg-black/55 border border-[#f5d76e]/40 pointer-events-none">
+                <p className="text-[9px] md:text-[10px] font-black text-[#f5d76e]">Preview mode</p>
+              </div>
+            )}
+
             {!previewMode && (
               <div
                 className={`absolute inset-0 grid z-[1] ${
@@ -718,12 +794,13 @@ export default function CribPage() {
                   }
                   confirmDisabled={!activeOverlay.valid}
                   cancelLabel={activeOverlay.kind === "pending" ? "Cancel" : "Delete"}
+                  compact={compactControls}
                 />
               </>
             )}
           </div>
 
-          <div className="absolute bottom-1 left-1 z-[5] w-[88%] max-w-[14rem] h-7 md:h-8 pointer-events-none">
+          <div className="hidden md:block absolute bottom-1 left-1 z-[5] w-[88%] max-w-[14rem] h-7 md:h-8 pointer-events-none">
             <Image
               src={SLICING.crib.bottomBar}
               alt=""
@@ -731,34 +808,33 @@ export default function CribPage() {
               className="object-fill"
               unoptimized
             />
-            <div className="absolute inset-0 flex items-center gap-1.5 md:gap-2 px-2 text-[6px] md:text-[7px] font-bold text-white">
-              <span className="flex items-center gap-0.5">
-                <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-[#4ade80]/55 border border-[#4ade80]" />
-                Place items
-              </span>
-              <span className="flex items-center gap-0.5">
-                <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-red-500/55 border border-red-400" />
-                Invalid Placement
-              </span>
-              <span className="flex items-center gap-0.5">
-                <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-white/25 border border-white/50" />
-                Empty Cell
-              </span>
+            {!previewMode && (
+            <div className="absolute inset-0 flex items-center gap-1.5 md:gap-2 px-2 text-[7px] md:text-[7px] font-bold text-white">
+              {editLegend}
             </div>
+            )}
+          </div>
+          </div>
+
+          {!previewMode && (
+            <div className="md:hidden flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-[10px] font-bold text-white/90">
+              {editLegend}
+            </div>
+          )}
+
+          <div className="md:hidden relative z-20 flex gap-2 mt-2.5 shrink-0">
+            {modeButtons}
           </div>
         </div>
 
-        <div
-          className="relative shrink-0 flex flex-col"
-          style={{ width: SLICING.cribInsets.ownedWidth }}
-        >
-          <div className="relative w-full">
+        <div className="relative w-full max-w-md mx-auto md:mx-0 md:max-w-none md:w-[34%] lg:max-w-[14rem] shrink-0 flex flex-col">
+          <div className="relative w-full md:flex-1 min-h-0 overflow-hidden">
             <Image
               src={SLICING.crib.mainPanel}
               alt=""
               width={300}
               height={400}
-              className="w-full h-auto pointer-events-none select-none"
+              className="w-full h-auto min-h-[12rem] md:min-h-0 pointer-events-none select-none"
               unoptimized
             />
             <div
@@ -776,30 +852,8 @@ export default function CribPage() {
             </div>
           </div>
 
-          <div className="flex gap-1.5 shrink-0 pt-1.5 justify-stretch">
-            <SlicedActionButton
-              src={SLICING.shop.unselectedButton}
-              onClick={() => {
-                setPreviewMode(false);
-                setPending(null);
-                setEditing(null);
-              }}
-              className="flex-1 h-8 md:h-9 text-[10px] md:text-xs"
-            >
-              Modify Crib
-            </SlicedActionButton>
-            <SlicedActionButton
-              src={SLICING.shop.unselectedButton}
-              onClick={() => {
-                setPreviewMode((p) => !p);
-                setPending(null);
-                setSelectedPlaceId(null);
-                setEditing(null);
-              }}
-              className="flex-1 h-8 md:h-9 text-[10px] md:text-xs"
-            >
-              {previewMode ? "Edit" : "Preview"}
-            </SlicedActionButton>
+          <div className="hidden md:flex relative z-20 gap-1.5 shrink-0 pt-1.5 justify-stretch">
+            {modeButtons}
           </div>
         </div>
       </div>

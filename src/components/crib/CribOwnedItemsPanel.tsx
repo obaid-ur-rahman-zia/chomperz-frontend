@@ -41,7 +41,7 @@ function CribItemSlot({
       onClick={onClick}
       disabled={disabled}
       title={label ?? item.name}
-      className={`relative shrink-0 w-full h-14 md:h-[3.75rem] transition-transform active:scale-95 ${
+      className={`relative shrink-0 w-full h-14 md:h-[3.75rem] max-md:w-[4.25rem] max-md:h-[4.25rem] transition-transform active:scale-95 ${
         active ? "ring-2 ring-[#facc15] z-[1]" : ""
       }`}
     >
@@ -119,18 +119,18 @@ export function CribOwnedItemsPanel({
       </div>
 
       {ownedItems.length === 0 ? (
-        <p className="text-xs text-white/70 font-bold p-2 flex-1">
+        <p className="text-xs text-white/70 font-bold p-2 flex-1 text-center md:text-left">
           No items yet.{" "}
           <Link href="/shop" className="text-[#4ade80] no-underline">
             Visit Shop
           </Link>
         </p>
       ) : (
-        <div className="flex flex-1 min-h-0 gap-1 mb-1">
+        <div className="flex flex-1 min-h-0 gap-1 mb-1 max-md:max-h-[5.5rem]">
           <div
             ref={scrollRef}
             onWheel={handleWheel}
-            className="flex-1 flex flex-col gap-1.5 overflow-y-auto hide-scrollbar min-h-0 pr-0.5"
+            className="flex-1 flex flex-col gap-1.5 overflow-y-auto hide-scrollbar min-h-0 pr-0.5 max-md:flex-row max-md:overflow-x-auto max-md:overflow-y-hidden max-md:gap-2 max-md:py-0.5 max-md:items-stretch"
           >
             {ownedItems.map((item) => {
               const isFloor = isFloorItemId(item.id);
@@ -150,7 +150,7 @@ export function CribOwnedItemsPanel({
             })}
           </div>
 
-          <div className="relative w-2.5 md:w-3 shrink-0 self-stretch min-h-[4rem] rounded-full bg-[#1a1008]/80 border border-[#3d2818]">
+          <div className="relative w-2.5 md:w-3 shrink-0 self-stretch min-h-[4rem] rounded-full bg-[#1a1008]/80 border border-[#3d2818] max-md:hidden">
             <div
               className="absolute left-0.5 right-0.5 rounded-full bg-white/85 shadow-sm"
               style={{

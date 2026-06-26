@@ -212,15 +212,26 @@ export default function MapPage() {
   const showRenters =
     detail?.status === "owned" && detail.landlordHandle && !detail.isLegendary;
   const canBid = detail?.viewerCanBid === true;
-  const showPurchaseBlocked =
+  const showFrontierRentHint =
     detail?.purchasePrice != null &&
     detail.status === "unclaimed" &&
     !detail.isLegendary &&
-    !canPurchase;
-  const showTakeoverBlocked =
-    detail?.canTakeover === true && !canTakeover;
+    !canPurchase &&
+    (player?.nftCount ?? 0) <= 0;
+  const showPurchaseWalletHint =
+    detail?.purchasePrice != null &&
+    detail.status === "unclaimed" &&
+    !detail.isLegendary &&
+    !canPurchase &&
+    (player?.nftCount ?? 0) > 0 &&
+    !player?.walletAddress;
   const showBidBlocked =
     showRenters && !canBid && detail?.viewerOwnsFrontierLand === true;
+  const showBidWalletHint =
+    showRenters &&
+    !canBid &&
+    !detail?.viewerOwnsFrontierLand &&
+    !player?.walletAddress;
   const legendaryNftId = detail?.legendaryTokenId ?? null;
   const showLegendaryNftHint =
     detail?.isLegendary === true &&
@@ -325,7 +336,7 @@ export default function MapPage() {
                 <div className="mb-3 p-3 rounded-lg border border-[var(--gold)]/40 bg-black/20 shrink-0">
                   <p className="text-xs font-bold text-white mb-1 flex items-center gap-1.5">
                     <CrownIcon className="text-[var(--gold)] w-4 h-4 shrink-0" />
-                    Crown Land — not for sale
+                    Crown Land (plots 1–10) — NFT required
                   </p>
                   <p className="text-[10px] text-[#c4b5a0] font-bold leading-relaxed">
                     Own {player?.nftCollectionName ?? "Chomperz"} NFT #{legendaryNftId} in your
@@ -334,11 +345,16 @@ export default function MapPage() {
                 </div>
               )}
 
-              {showPurchaseBlocked && (
-                <p className="text-xs font-bold text-red-300 mb-3 shrink-0">
-                  {(player?.nftCount ?? 0) <= 0
-                    ? "NFT required to buy land"
-                    : "Connect wallet to purchase land"}
+              {showFrontierRentHint && (
+                <p className="text-xs font-bold text-[#c4b5a0] mb-3 shrink-0 leading-relaxed">
+                  Only NFT holders can purchase empty frontier plots. Without an NFT you can still
+                  rent on an owned plot — select one with a landlord to place a bid.
+                </p>
+              )}
+
+              {showPurchaseWalletHint && (
+                <p className="text-xs font-bold text-[#c4b5a0] mb-3 shrink-0">
+                  Connect wallet to purchase this plot.
                 </p>
               )}
 
@@ -369,14 +385,6 @@ export default function MapPage() {
                     </p>
                   )}
                 </div>
-              )}
-
-              {showTakeoverBlocked && (
-                <p className="text-xs font-bold text-red-300 mb-3 shrink-0">
-                  {(player?.nftCount ?? 0) <= 0
-                    ? "NFT required to take over land"
-                    : "Connect wallet to take over land"}
-                </p>
               )}
 
               {canTakeover && (
@@ -450,7 +458,14 @@ export default function MapPage() {
 
                   {showBidBlocked && (
                     <p className="text-xs font-bold text-red-300 mb-2 shrink-0">
-                      Land owners cannot rent on other plots
+                      Land owners cannot rent on other plots. Bidding is only for players who do
+                      not own land.
+                    </p>
+                  )}
+
+                  {showBidWalletHint && (
+                    <p className="text-xs font-bold text-[#c4b5a0] mb-2 shrink-0">
+                      Connect wallet to bid for rent on this plot.
                     </p>
                   )}
 

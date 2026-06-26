@@ -161,6 +161,7 @@ export interface PlotDetail extends PlotSummary {
   loginRemainingMs?: number | null;
   landlordTaxPct?: number;
   viewerOwnsFrontierLand?: boolean;
+  viewerHasWallet?: boolean;
   viewerCanPurchase?: boolean;
   viewerCanTakeover?: boolean;
   viewerCanBid?: boolean;

@@ -16,6 +16,7 @@ import { SlicedPage, SlicedPanel, SlicedActionButton } from "@/components/sliced
 import { SLICING } from "@/lib/slicing-paths";
 import { formatHandle } from "@/lib/handle";
 import Image from "next/image";
+import Link from "next/link";
 import { MapSkeleton, PlotDetailSkeleton, Spinner } from "@/components/Loading";
 
 function plotCellBg(plot: PlotSummary): string | null {
@@ -53,6 +54,11 @@ function patchToSummary(patch: PlotPatchPayload): Partial<PlotSummary> {
     abandonedAt: patch.abandonedAt,
     renters: patch.renters,
   };
+}
+
+function cribHref(handle?: string | null): string | null {
+  if (!handle) return null;
+  return `/crib/view?handle=${encodeURIComponent(handle)}`;
 }
 
 export default function MapPage() {
@@ -225,6 +231,12 @@ export default function MapPage() {
     !canPurchase &&
     (player?.nftCount ?? 0) > 0 &&
     !player?.walletAddress;
+  const showPurchaseOwnedHint =
+    detail?.purchasePrice != null &&
+    detail.status === "unclaimed" &&
+    !detail.isLegendary &&
+    !canPurchase &&
+    detail.viewerOwnsFrontierLand === true;
   const showBidBlocked =
     showRenters && !canBid && detail?.viewerOwnsFrontierLand === true;
   const showBidWalletHint =
@@ -358,6 +370,12 @@ export default function MapPage() {
                 </p>
               )}
 
+              {showPurchaseOwnedHint && (
+                <p className="text-xs font-bold text-[#c4b5a0] mb-3 shrink-0">
+                  You already own land. Each player can own one plot.
+                </p>
+              )}
+
               {canPurchase && (
                 <div className="mb-3 shrink-0">
                   <p className="text-xs font-bold text-white/80 mb-2">
@@ -415,7 +433,19 @@ export default function MapPage() {
                     <p className="text-[#4ade80]">
                       Status: <span className="text-white">Current LandLord</span>
                     </p>
-                    <p className="text-white">Name: {formatHandle(detail.landlordHandle ?? "unknown")}</p>
+                    <p className="text-white">
+                      Name:{" "}
+                      {cribHref(detail.landlordHandle) ? (
+                        <Link
+                          href={cribHref(detail.landlordHandle)!}
+                          className="text-white underline decoration-white/40 underline-offset-2 hover:text-[#f5d76e]"
+                        >
+                          {formatHandle(detail.landlordHandle ?? "unknown")}
+                        </Link>
+                      ) : (
+                        formatHandle(detail.landlordHandle ?? "unknown")
+                      )}
+                    </p>
                     <p className="text-[#c4b5a0] text-[10px]">
                       Earning: Takes {detail.landlordTaxPct ?? 10}% of all rent Collected
                     </p>
@@ -443,8 +473,18 @@ export default function MapPage() {
                               unoptimized
                             />
                             <div className="absolute inset-0 flex justify-between items-center px-2 text-[10px] font-bold text-white">
-                              <span>
-                                {i + 1}. {formatHandle(r.twitterHandle || r.walletAddress.slice(0, 8))}
+                              <span className="min-w-0 truncate">
+                                {i + 1}.{" "}
+                                {cribHref(r.twitterHandle) ? (
+                                  <Link
+                                    href={cribHref(r.twitterHandle)!}
+                                    className="text-white underline decoration-white/40 underline-offset-2 hover:text-[#f5d76e]"
+                                  >
+                                    {formatHandle(r.twitterHandle || r.walletAddress.slice(0, 8))}
+                                  </Link>
+                                ) : (
+                                  formatHandle(r.twitterHandle || r.walletAddress.slice(0, 8))
+                                )}
                               </span>
                               <span className="text-[#4ade80] tabular-nums">
                                 ${r.sevenDayBid ?? r.escrowBalance} / Day

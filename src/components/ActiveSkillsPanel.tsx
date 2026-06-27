@@ -158,6 +158,9 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
   const progress = runningDisplay?.progressPct ?? 0;
   const secondsRemaining = runningDisplay?.secondsRemaining ?? skills.action.secondsRemaining;
   const rewardLabel = selected.rewardItemLabel.replace(/s$/i, "") || selected.rewardItemLabel;
+  const runningSkill = skills.action.skill
+    ? skills.skills.find((skill) => skill.id === skills.action.skill) ?? null
+    : null;
 
   return (
     <SlicedPanel
@@ -203,6 +206,11 @@ export function ActiveSkillsPanel({ initial, onRefresh }: ActiveSkillsPanelProps
             </SlicedActionButton>
           </Link>
         </div>
+        {isRunning && runningSkill && runningSkill.id !== selected.id && (
+          <p className="text-[9px] md:text-[10px] font-bold text-[#f5d76e] -mt-0.5">
+            Running: {runningSkill.label}
+          </p>
+        )}
 
         <div className="relative w-full h-10 md:h-12 shrink-0">
           <Image

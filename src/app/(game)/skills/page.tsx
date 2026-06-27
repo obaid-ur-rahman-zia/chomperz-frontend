@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { SlicedPage, SlicedPanel, SlicedSubTabs, SlicedActionButton } from "@/components/sliced";
 import { SLICING, SKILL_ICONS } from "@/lib/slicing-paths";
 import { apiFetch, type ActiveSkillsState, type ActiveSkillEntry } from "@/lib/api";
 import { toast } from "@/lib/toast";
 import { SkillsSkeleton } from "@/components/Loading";
+import { usePlayer } from "@/hooks/usePlayer";
 
 const GATHERING_SKILLS = ["woodcutting", "mining"];
 const REFINING_SKILLS = ["carpentry", "smithing"];
@@ -98,7 +98,7 @@ function SkillCard({
                 <span className="text-[#c4b5a0]">Cost</span>
                 <span className="flex items-center gap-1 text-[#facc15]">
                   <Image src={SLICING.mainMenu.simpleCoin} alt="" width={14} height={14} className="w-3.5 h-3.5" unoptimized />
-                  {Math.max(2, skill.level * 2)} Coins
+                  {skill.upgradeCost ?? Math.max(2, skill.level * 2)} Coins
                 </span>
               </div>
             </div>
@@ -118,7 +118,7 @@ function SkillCard({
 }
 
 export default function SkillsPage() {
-  const router = useRouter();
+  const { refresh } = usePlayer();
   const [tab, setTab] = useState("gathering");
   const [skills, setSkills] = useState<ActiveSkillsState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -142,14 +142,15 @@ export default function SkillsPage() {
   async function handleLevelUp(skillId: string) {
     setBusy(true);
     try {
-      await apiFetch<ActiveSkillsState>("/api/player/skills/select", {
+      const data = await apiFetch<ActiveSkillsState & { coins?: number }>("/api/player/skills/upgrade", {
         method: "POST",
         body: JSON.stringify({ skill: skillId }),
       });
-      toast.success("Skill selected — run actions on Home to level up!");
-      router.push("/dashboard");
+      setSkills(data);
+      await refresh({ silent: true });
+      toast.success(`${SKILL_LABELS[skillId] ?? "Skill"} leveled up!`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to select skill");
+      toast.error(e instanceof Error ? e.message : "Failed to level up skill");
     } finally {
       setBusy(false);
     }

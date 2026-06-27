@@ -128,8 +128,6 @@ function DashboardContent() {
   const activeSkills = player.activeSkills;
   const speedUpgrading = player.isSpeedUpgrading && speedRemaining > 0;
   const powerUpgrading = player.isPowerUpgrading && powerRemaining > 0;
-  const upgradeRemaining = Math.max(powerRemaining, speedRemaining);
-
   const rarityLabel =
     player.nftCount === 0
       ? "No NFT"
@@ -239,25 +237,44 @@ function DashboardContent() {
               </div>
             </div>
 
-            <div className="relative shrink-0">
-              <Image
-                src={SLICING.mainMenu.timePanel}
-                alt=""
-                width={300}
-                height={28}
-                className="w-full h-6 md:h-7 object-fill"
-                unoptimized
-              />
-              <div className="absolute inset-0 flex items-center justify-between px-3 text-[9px] md:text-[10px] font-black text-white">
-                <span className="flex items-center gap-1">
-                  <span aria-hidden>🕐</span>
-                  Remaining Time
-                </span>
-                <span className="tabular-nums">
-                  {powerUpgrading || speedUpgrading
-                    ? formatDuration(upgradeRemaining)
-                    : "00:00:00"}
-                </span>
+            <div className="space-y-1 shrink-0">
+              <div className="relative h-6 md:h-7">
+                <Image
+                  src={SLICING.mainMenu.timePanel}
+                  alt=""
+                  width={300}
+                  height={28}
+                  className="w-full h-6 md:h-7 object-fill"
+                  unoptimized
+                />
+                <div className="absolute inset-0 flex items-center justify-between px-3 text-[9px] md:text-[10px] font-black text-white">
+                  <span className="flex items-center gap-1">
+                    <span aria-hidden>🕐</span>
+                    Power Time
+                  </span>
+                  <span className="tabular-nums">
+                    {powerUpgrading ? formatDuration(powerRemaining) : "00:00:00"}
+                  </span>
+                </div>
+              </div>
+              <div className="relative h-6 md:h-7">
+                <Image
+                  src={SLICING.mainMenu.timePanel}
+                  alt=""
+                  width={300}
+                  height={28}
+                  className="w-full h-6 md:h-7 object-fill"
+                  unoptimized
+                />
+                <div className="absolute inset-0 flex items-center justify-between px-3 text-[9px] md:text-[10px] font-black text-white">
+                  <span className="flex items-center gap-1">
+                    <span aria-hidden>🕐</span>
+                    Speed Time
+                  </span>
+                  <span className="tabular-nums">
+                    {speedUpgrading ? formatDuration(speedRemaining) : "00:00:00"}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

@@ -59,6 +59,7 @@ export interface ActiveSkillEntry {
   inputItemId?: string | null;
   inputQuantity?: number;
   actionDurationMs?: number;
+  upgradeCost?: number;
 }
 
 export interface ActiveSkillsState {
